@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Benni Media",
+        "description": "Media-Cockpit (Dach für State/Policy/Apply) hinzufügen? Es werden keine weiteren Eingaben benötigt."
+      }
+    },
+    "abort": {
+      "already_configured": "Benni Media ist bereits eingerichtet."
+    }
+  }
+}

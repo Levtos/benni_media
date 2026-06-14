@@ -1,0 +1,14 @@
+{
+  "domain": "benni_media",
+  "name": "Benni Media",
+  "version": "0.1.0",
+  "documentation": "https://github.com/Levtos/benni_media",
+  "issue_tracker": "https://github.com/Levtos/benni_media/issues",
+  "codeowners": ["@Levtos"],
+  "config_flow": true,
+  "iot_class": "calculated",
+  "integration_type": "service",
+  "dependencies": ["http", "websocket_api", "frontend"],
+  "after_dependencies": ["benni_media_state", "benni_media_policy", "benni_media_apply"],
+  "requirements": []
+}
