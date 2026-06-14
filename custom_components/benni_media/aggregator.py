@@ -119,6 +119,9 @@ def get_overview(hass: HomeAssistant) -> dict[str, Any]:
         "quiet_mode": _first(_g(st, "quiet_mode"), _g(pol, "quiet_mode")),
         "entertainment_active": _g(st, "entertainment_active"),
         "headset_active": _g(st, "headset_active"),
+        "now_playing": _g(st, "now_playing"),
+        "devices": _g(st, "devices"),
+        "active_reasons": _g(st, "active_reasons"),
         "targets": {
             "homepods_volume": _first(_g(pol, "volume_target_homepods"), _g(ap, "policy", "homepods_target")),
             "denon_volume": _first(_g(pol, "volume_target_denon"), _g(ap, "policy", "denon_target")),

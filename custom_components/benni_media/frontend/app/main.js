@@ -22,6 +22,9 @@ const pct = (v) => (v == null || v === "" ? "—" : Math.round(Number(v) * 100) 
 const yn = (v) => (v == null ? "—" : v ? "ja" : "nein");
 const num = (v) => (v == null || v === "" ? "—" : v);
 
+const DEVICE_ORDER = ["tv", "apple_tv", "ps5", "switch", "pc", "homepods", "denon"];
+const DEVICE_LABEL = { tv: "TV", apple_tv: "Apple TV", ps5: "PS5", switch: "Switch", pc: "PC", homepods: "HomePods", denon: "Denon" };
+
 const css = `
 :host { display:block; font-family: ui-sans-serif, system-ui, sans-serif;
   background:#1a1b26; color:#c0caf5; min-height:100vh; box-sizing:border-box; }
@@ -210,6 +213,21 @@ class BenniMediaApp extends HTMLElement {
     });
   }
 
+  _devices(devices) {
+    if (!devices || typeof devices !== "object") return `<div class="mut">Keine Geräte-Daten (media_state ≥ 0.3.0 nötig).</div>`;
+    const tiles = DEVICE_ORDER.filter((id) => devices[id]).map((id) => {
+      const d = devices[id];
+      const np = d.title ? `${d.title}${d.artist ? " · " + d.artist : ""}` : (d.app || d.source || "");
+      const extra = (np ? esc(np) : "") + (d.volume != null ? (np ? " · " : "") + pct(d.volume) : "");
+      return `<div class="tile ${d.active ? "on" : "off"}" data-srch="${esc(DEVICE_LABEL[id] || id)} ${esc(d.state)} ${esc(np)}">
+        <div class="nm"><ha-icon icon="${esc(d.icon || "")}" style="--mdc-icon-size:18px;vertical-align:middle;"></ha-icon> ${esc(DEVICE_LABEL[id] || id)}</div>
+        <div class="vl">${esc(d.state || "—")}</div>
+        ${extra ? `<div class="mut" style="margin-top:2px;">${extra}</div>` : ""}
+      </div>`;
+    }).join("");
+    return `<div class="tiles">${tiles || `<div class="mut">—</div>`}</div>`;
+  }
+
   _loading() { return `<div class="card"><div class="empty"><div class="mut">Lade Daten…</div></div></div>`; }
 
   _errorCard(title, msg) {
@@ -248,6 +266,7 @@ class BenniMediaApp extends HTMLElement {
       <div class="card hero"><h2>Aktuelles Szenario</h2>
         <div class="kpi acc">${esc(d.scenario || "—")}</div>
         <div class="mut">${esc(d.subcontext || "—")} · Gerät ${esc(d.device || "—")} · Gaming ${esc(d.gaming_source || "—")}</div>
+        ${d.now_playing && d.now_playing.title ? `<div style="margin-top:8px;color:#9ece6a;font-size:14px;">♪ ${esc(d.now_playing.title)}${d.now_playing.artist ? " — " + esc(d.now_playing.artist) : ""}${d.now_playing.volume != null ? " · " + pct(d.now_playing.volume) : ""} <span class="mut">(${esc(d.now_playing.device)})</span></div>` : ""}
       </div>
       <div class="grid cols" style="margin-top:14px;">
         <div class="card"><h2>Audio Owner</h2><div class="kpi">${esc(d.audio_owner || "—")}</div><div class="mut">Aktion: ${esc(d.action || "—")}</div></div>
@@ -262,7 +281,8 @@ class BenniMediaApp extends HTMLElement {
           ${tile("Entertainment", d.entertainment_active ? "aktiv" : "aus", d.entertainment_active)}
           ${tile("Subwoofer", t.subwoofer_allowed ? "erlaubt" : "gesperrt", t.subwoofer_allowed)}
         </div>
-      </div>`;
+      </div>
+      <div class="card" style="margin-top:14px;"><h2>Geräte</h2>${this._devices(d.devices)}</div>`;
   }
 
   _tab_state(env) {
@@ -280,7 +300,8 @@ class BenniMediaApp extends HTMLElement {
         <div class="card"><h2>Aktive Gründe</h2>
           <div class="reasons">${reasons.length ? reasons.map((r) => `<div data-srch="${esc(r)}">${esc(r)}</div>`).join("") : `<div class="mut">No active reasons</div>`}</div>
         </div>
-      </div>`;
+      </div>
+      <div class="card" style="margin-top:14px;"><h2>Geräte-Matrix</h2>${this._devices(d.devices)}</div>`;
   }
 
   _tab_policy(env) {
