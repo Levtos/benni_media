@@ -1,7 +1,7 @@
 {
   "domain": "benni_media",
   "name": "Benni Media",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "documentation": "https://github.com/Levtos/benni_media",
   "issue_tracker": "https://github.com/Levtos/benni_media/issues",
   "codeowners": ["@Levtos"],

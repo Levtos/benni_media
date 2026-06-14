@@ -290,13 +290,20 @@ class BenniMediaApp extends HTMLElement {
     if (!m.available || !env.data) return this._missingCard("State", m.error);
     const d = env.data;          // media_state liefert FLACH (context = Szenario-String)
     const reasons = d.active_reasons || [];
+    const ctx = d.context_cards || {};
+    const cl = d.classifiers || {};
+    const clRow = (label, o) => `<div class="row" data-srch="${esc(label)} ${esc(o && o.label)}"><span class="k">${label}</span><span class="v">${o && o.enum != null ? esc(o.enum) + " · " + esc(o.label || "—") : "—"}</span></div>`;
     return `
       <div class="card hero"><h2>Context Recognition</h2>
         <div class="kpi acc">${esc(d.context || d.media_scenario || "—")}</div>
         <div class="mut">${esc(d.subcontext || "—")} · Gerät ${esc(d.device || "—")} · Gaming ${esc(d.gaming_source || "—")}</div>
       </div>
       <div class="grid two" style="margin-top:14px;">
-        <div class="card"><h2>Kontext & Flags</h2>${this._rows(d)}</div>
+        <div class="card"><h2>Kontext (core_state)</h2>${Object.keys(ctx).length ? this._rows(ctx) : `<div class="mut">Kein Kontext-Echo (media_state ≥ 0.4.0 nötig).</div>`}</div>
+        <div class="card"><h2>Classifier</h2>${clRow("PS5", cl.ps5)}${clRow("PC", cl.pc)}${clRow("HomePods", cl.homepods)}</div>
+      </div>
+      <div class="grid two" style="margin-top:14px;">
+        <div class="card"><h2>Media-Flags</h2>${this._rows(d)}</div>
         <div class="card"><h2>Aktive Gründe</h2>
           <div class="reasons">${reasons.length ? reasons.map((r) => `<div data-srch="${esc(r)}">${esc(r)}</div>`).join("") : `<div class="mut">No active reasons</div>`}</div>
         </div>
