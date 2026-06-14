@@ -307,20 +307,41 @@ class BenniMediaApp extends HTMLElement {
   _tab_policy(env) {
     const m = this._mod(env, "policy");
     if (!m.available || !env.data) return this._missingCard("Policy", m.error);
-    const d = env.data;          // media_policy liefert FLACH
+    const d = env.data;          // media_policy status(): Decision + reasons + volume_formula
+    const sgn = (v) => (v == null ? "—" : (v > 0 ? "+" : "") + pct(v));
+    const reasons = d.reasons || [];
+    const why = reasons.length
+      ? reasons.map((r) => `<div class="sev-${esc(r.severity || "ok")}" data-srch="${esc(r.text)}" style="padding:3px 0;font-size:13px;">● ${esc(r.text)}</div>`).join("")
+      : `<div class="mut">—</div>`;
+    const vf = d.volume_formula || {};
+    const fcard = (name, o) => !o ? "" : `
+      <div style="margin-bottom:10px;">
+        <div class="mut" style="margin-bottom:2px;">${name}${o.plays ? "" : " · spielt nicht"}</div>
+        <div class="row"><span class="k">Base</span><span class="v">${pct(o.base)}</span></div>
+        <div class="row"><span class="k">Szenario</span><span class="v">${sgn(o.scenario_offset)}</span></div>
+        <div class="row"><span class="k">Fenster</span><span class="v">${sgn(o.window_offset)}</span></div>
+        <div class="row"><span class="k">Aktivität</span><span class="v">${sgn(o.activity_offset)}</span></div>
+        <div class="row"><span class="k">Nudge</span><span class="v">${sgn(o.manual_nudge)}</span></div>
+        <div class="row"><span class="k">Track-Boost</span><span class="v">${sgn(o.track_boost)}</span></div>
+        <div class="row"><span class="k" style="color:#7dcfff;">→ Result</span><span class="v soll">${pct(o.result)}</span></div>
+      </div>`;
     return `
       <div class="card hero"><h2>Decision Engine</h2>
         <div class="kpi acc">${esc(d.volume_policy || "—")}</div>
-        <div class="mut">Audio: ${esc(d.audio_owner || "—")} · Aktion: ${esc(d.action || "—")}</div>
+        <div class="mut">Audio: ${esc(d.audio_owner || "—")} · Aktion: ${esc(d.action || "—")}${d.is_grind ? " · GRIND" : ""}${d.track_boost_applied ? " · Boost" : ""}${d.music_muted ? " · Mute" : ""}</div>
       </div>
       <div class="grid two" style="margin-top:14px;">
-        <div class="card"><h2>Zielwerte / Entscheidung</h2>${this._rows(d)}</div>
+        <div class="card"><h2>Why-Stack (Reasons)</h2>${why}</div>
         <div class="card"><h2>Volume-Ziele</h2>
           <div class="row"><span class="k">HomePods</span><span class="v soll">${pct(d.volume_target_homepods)}</span></div>
           <div class="row"><span class="k">Denon</span><span class="v soll">${pct(d.volume_target_denon)}</span></div>
           <div class="row"><span class="k">Subwoofer erlaubt</span><span class="v">${yn(d.subwoofer_allowed)}</span></div>
           <div class="row"><span class="k">Volume Apply erlaubt</span><span class="v">${yn(d.volume_apply_allowed)}</span></div>
         </div>
+      </div>
+      <div class="grid two" style="margin-top:14px;">
+        <div class="card"><h2>Volume-Formel (R17)</h2>${(vf.homepods || vf.denon) ? (fcard("HomePods", vf.homepods) + fcard("Denon", vf.denon)) : `<div class="mut">Keine Formel-Daten (media_policy ≥ 0.5.0 nötig).</div>`}</div>
+        <div class="card"><h2>Entscheidung (Details)</h2>${this._rows(d)}</div>
       </div>`;
   }
 
