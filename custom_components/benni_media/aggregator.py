@@ -92,25 +92,37 @@ def _g(d: Any, *keys: str, default: Any = None) -> Any:
     return cur if cur is not None else default
 
 
+def _first(*vals: Any) -> Any:
+    """Erster Wert, der nicht None ist (0 / False / "" bleiben erhalten)."""
+    for v in vals:
+        if v is not None:
+            return v
+    return None
+
+
 def get_overview(hass: HomeAssistant) -> dict[str, Any]:
     snaps = _all_snaps(hass)
     st, pol, ap = snaps["state"]["data"], snaps["policy"]["data"], snaps["apply"]["data"]
+    # Module liefern FLACH (media_state: context=Szenario-String; media_policy:
+    # volume_target_* flach). Defensiv + 0/False-erhaltend mappen.
     data = {
-        "scenario": _g(st, "media_scenario") or _g(st, "context", "media_scenario") or _g(st, "scenario"),
-        "subcontext": _g(st, "subcontext") or _g(st, "context", "subcontext"),
-        "device": _g(st, "device") or _g(st, "context", "device"),
-        "gaming_source": _g(st, "gaming_source") or _g(st, "context", "gaming_source"),
-        "audio_owner": _g(pol, "audio_owner") or _g(pol, "decision", "audio_owner"),
-        "action": _g(pol, "action") or _g(pol, "decision", "action") or _g(ap, "plan", "homepods_action"),
-        "volume_policy": _g(pol, "volume_policy") or _g(pol, "decision", "volume_policy"),
+        "scenario": _first(_g(st, "media_scenario"), _g(st, "scenario"), _g(st, "context")),
+        "subcontext": _g(st, "subcontext"),
+        "device": _g(st, "device"),
+        "gaming_source": _g(st, "gaming_source"),
+        "gaming_platform": _g(st, "gaming_platform"),
+        "audio_owner": _g(pol, "audio_owner"),
+        "action": _first(_g(pol, "action"), _g(ap, "plan", "homepods_action")),
+        "volume_policy": _g(pol, "volume_policy"),
         "apply_enabled": _g(ap, "apply_enabled"),
         "execute": _g(ap, "execute"),
-        "quiet_mode": _g(st, "quiet_mode") or _g(st, "flags", "quiet_mode") or _g(pol, "quiet_mode"),
-        "entertainment_active": _g(st, "entertainment_active") or _g(st, "flags", "entertainment_active"),
+        "quiet_mode": _first(_g(st, "quiet_mode"), _g(pol, "quiet_mode")),
+        "entertainment_active": _g(st, "entertainment_active"),
+        "headset_active": _g(st, "headset_active"),
         "targets": {
-            "homepods_volume": _g(pol, "homepods_target") or _g(pol, "targets", "homepods_volume") or _g(ap, "policy", "homepods_target"),
-            "denon_volume": _g(pol, "denon_target") or _g(pol, "targets", "denon_volume") or _g(ap, "policy", "denon_target"),
-            "subwoofer_allowed": _g(pol, "subwoofer_allowed") or _g(ap, "policy", "subwoofer_allowed"),
+            "homepods_volume": _first(_g(pol, "volume_target_homepods"), _g(ap, "policy", "homepods_target")),
+            "denon_volume": _first(_g(pol, "volume_target_denon"), _g(ap, "policy", "denon_target")),
+            "subwoofer_allowed": _first(_g(pol, "subwoofer_allowed"), _g(ap, "policy", "subwoofer_allowed")),
         },
         "raw": {"state": st, "policy": pol, "apply": ap},
     }
@@ -118,8 +130,10 @@ def get_overview(hass: HomeAssistant) -> dict[str, Any]:
 
 
 def _single(hass: HomeAssistant, key: str, module_label: str) -> dict[str, Any]:
-    snap = _snapshot(hass, MODULE_DOMAINS[key])
-    env = _envelope({key: _module_health(snap)}, snap["data"])
+    # Alle Modul-Healths mitliefern → konsistente Header-Badges über alle Tabs.
+    snaps = _all_snaps(hass)
+    snap = snaps[key]
+    env = _envelope({k: _module_health(v) for k, v in snaps.items()}, snap["data"])
     env["module"] = module_label
     env["ok"] = snap["available"]
     return env

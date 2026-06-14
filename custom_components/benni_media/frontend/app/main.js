@@ -82,6 +82,7 @@ class BenniMediaApp extends HTMLElement {
     this._data = {};       // tab -> envelope
     this._raw = false;
     this._search = "";
+    this._last = {};       // tab -> letzte gerenderte Signatur (Flicker-Schutz)
   }
 
   set hass(h) { this._hass = h; if (!this._timer) { this._tick(); this._timer = setInterval(() => this._tick(), 3000); } }
@@ -101,7 +102,19 @@ class BenniMediaApp extends HTMLElement {
     } catch (e) {
       this._err = e.message || String(e);
     }
-    this._safeRender();
+    // Nur neu rendern, wenn sich was geändert hat (kein 3s-Flicker, Suchfeld bleibt).
+    const sig = JSON.stringify({ d: this._data[this._tab], e: this._err, raw: this._raw, t: this._tab });
+    if (sig !== this._last[this._tab]) { this._last[this._tab] = sig; this._safeRender(); }
+  }
+
+  async _copy(text) {
+    try { await navigator.clipboard.writeText(text); return true; } catch (e) { /* fallback */ }
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.top = "-1000px";
+      this.shadowRoot.appendChild(ta); ta.focus(); ta.select();
+      const ok = document.execCommand("copy"); this.shadowRoot.removeChild(ta); return ok;
+    } catch (e) { console.error("copy failed", e); return false; }
   }
 
   _safeRender() {
@@ -146,7 +159,7 @@ class BenniMediaApp extends HTMLElement {
         </span>
         <span class="chip cy">${esc(contract)}</span>
       </div>
-      <div class="sub">Stand: ${updated}</div>
+      <div class="sub">Stand: ${updated} · auto-refresh 3 s</div>
       <div class="tabs">${tabs}</div>
       <div class="tools">
         <input id="search" type="text" placeholder="Suche (Keys, Werte, Entity-IDs)…" value="${esc(this._search)}">
@@ -160,7 +173,7 @@ class BenniMediaApp extends HTMLElement {
     else if (!env) body = this._loading();
     else body = this[`_tab_${this._tab}`] ? this[`_tab_${this._tab}`](env) : this._loading();
 
-    const raw = this._raw && env ? `<div class="card"><h2>Raw Envelope</h2><pre>${esc(JSON.stringify(env, null, 2))}</pre></div>` : "";
+    const raw = this._raw && env ? `<div class="card"><h2>Raw Envelope <button id="copyenv" style="float:right;margin-top:-4px;">Copy JSON</button></h2><pre>${esc(JSON.stringify(env, null, 2))}</pre></div>` : "";
 
     this.shadowRoot.getElementById("root").innerHTML = head + body + raw;
     this._wire();
@@ -174,9 +187,19 @@ class BenniMediaApp extends HTMLElement {
     if ($("refresh")) $("refresh").onclick = () => this._tick();
     if ($("refresh2")) $("refresh2").onclick = () => this._tick();
     if ($("search")) $("search").oninput = (e) => { this._search = e.target.value; this._filter(); };
-    if ($("copy")) $("copy").onclick = async () => {
-      try { await navigator.clipboard.writeText(JSON.stringify(this._data[this._tab] || {}, null, 2)); } catch {}
+    const cp = (id, getText) => {
+      const b = $(id);
+      if (!b) return;
+      b.onclick = async () => {
+        const ok = await this._copy(getText());
+        const t = b.textContent;
+        b.textContent = ok ? "Kopiert ✓" : "Copy fehlgeschlagen";
+        setTimeout(() => { b.textContent = t; }, 1200);
+      };
     };
+    cp("copy", () => JSON.stringify(this._data[this._tab] || {}, null, 2));
+    cp("copyraw", () => JSON.stringify((this._data[this._tab]?.data?.raw) || {}, null, 2));
+    cp("copyenv", () => JSON.stringify(this._data[this._tab] || {}, null, 2));
     this._filter();
   }
 
@@ -245,16 +268,15 @@ class BenniMediaApp extends HTMLElement {
   _tab_state(env) {
     const m = this._mod(env, "state");
     if (!m.available || !env.data) return this._missingCard("State", m.error);
-    const d = env.data;
-    const ctx = d.context || d;        // media_state liefert ggf. flach
+    const d = env.data;          // media_state liefert FLACH (context = Szenario-String)
     const reasons = d.active_reasons || [];
     return `
       <div class="card hero"><h2>Context Recognition</h2>
-        <div class="kpi acc">${esc(ctx.media_scenario || "—")}</div>
-        <div class="mut">${esc(ctx.subcontext || "—")} · ${esc(ctx.device || "—")} · ${esc(ctx.gaming_source || "—")}</div>
+        <div class="kpi acc">${esc(d.context || d.media_scenario || "—")}</div>
+        <div class="mut">${esc(d.subcontext || "—")} · Gerät ${esc(d.device || "—")} · Gaming ${esc(d.gaming_source || "—")}</div>
       </div>
       <div class="grid two" style="margin-top:14px;">
-        <div class="card"><h2>Kontext</h2>${this._rows(ctx)}</div>
+        <div class="card"><h2>Kontext & Flags</h2>${this._rows(d)}</div>
         <div class="card"><h2>Aktive Gründe</h2>
           <div class="reasons">${reasons.length ? reasons.map((r) => `<div data-srch="${esc(r)}">${esc(r)}</div>`).join("") : `<div class="mut">No active reasons</div>`}</div>
         </div>
@@ -264,16 +286,20 @@ class BenniMediaApp extends HTMLElement {
   _tab_policy(env) {
     const m = this._mod(env, "policy");
     if (!m.available || !env.data) return this._missingCard("Policy", m.error);
-    const d = env.data;
-    const dec = d.decision || d;
+    const d = env.data;          // media_policy liefert FLACH
     return `
       <div class="card hero"><h2>Decision Engine</h2>
-        <div class="kpi acc">${esc(dec.media_scenario || dec.scenario || "—")}</div>
-        <div class="mut">Audio: ${esc(dec.audio_owner || "—")} · Aktion: ${esc(dec.action || "—")} · ${esc(dec.volume_policy || "—")}</div>
+        <div class="kpi acc">${esc(d.volume_policy || "—")}</div>
+        <div class="mut">Audio: ${esc(d.audio_owner || "—")} · Aktion: ${esc(d.action || "—")}</div>
       </div>
       <div class="grid two" style="margin-top:14px;">
-        <div class="card"><h2>Zielwerte / Entscheidung</h2>${this._rows(dec)}</div>
-        <div class="card"><h2>Targets</h2>${this._rows(d.targets || {})}</div>
+        <div class="card"><h2>Zielwerte / Entscheidung</h2>${this._rows(d)}</div>
+        <div class="card"><h2>Volume-Ziele</h2>
+          <div class="row"><span class="k">HomePods</span><span class="v soll">${pct(d.volume_target_homepods)}</span></div>
+          <div class="row"><span class="k">Denon</span><span class="v soll">${pct(d.volume_target_denon)}</span></div>
+          <div class="row"><span class="k">Subwoofer erlaubt</span><span class="v">${yn(d.subwoofer_allowed)}</span></div>
+          <div class="row"><span class="k">Volume Apply erlaubt</span><span class="v">${yn(d.volume_apply_allowed)}</span></div>
+        </div>
       </div>`;
   }
 
@@ -308,7 +334,7 @@ class BenniMediaApp extends HTMLElement {
       `<div class="row" data-srch="${esc(k)}"><span class="k">${esc(k)}</span><span class="v ${v.healthy ? "sev-ok" : v.available ? "sev-warn" : "sev-blocked"}">${v.available ? (v.healthy ? "healthy" : "degraded") : "missing"}${v.error ? " · " + esc(v.error) : ""}</span></div>`).join("");
     return `
       <div class="card"><h2>Modulstatus</h2>${modRows || `<div class="mut">—</div>`}</div>
-      <div class="card" style="margin-top:14px;"><h2>Raw Snapshots</h2><pre>${esc(JSON.stringify(d.raw || {}, null, 2))}</pre></div>`;
+      <div class="card" style="margin-top:14px;"><h2>Raw Snapshots <button id="copyraw" style="float:right;margin-top:-4px;">Copy JSON</button></h2><pre>${esc(JSON.stringify(d.raw || {}, null, 2))}</pre></div>`;
   }
 }
 
