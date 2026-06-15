@@ -90,6 +90,18 @@ button:disabled { opacity:.5; cursor:wait; }
   pointer-events:none; max-width:80vw; }
 .toast.show { opacity:1; }
 .toast.bad { border-color:#f7768e; color:#f7768e; }
+.radio-shortcuts { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
+.radio-search { display:flex; gap:8px; align-items:center; margin-top:8px; }
+.radio-search input { flex:1; background:#1a1b26; border:1px solid #414868; color:#c0caf5;
+  border-radius:8px; padding:7px 10px; font-size:13px; }
+button.mini { padding:4px 9px; font-size:12px; }
+.radio-results { display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+.radio-hit { display:flex; align-items:center; gap:10px; padding:5px 8px;
+  background:#1a1b26; border:1px solid #2a2e42; border-radius:8px; }
+.radio-hit img { width:32px; height:32px; border-radius:6px; object-fit:cover; background:#24283b; }
+.radio-ph { width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+  background:#24283b; border-radius:6px; }
+.radio-name { flex:1; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 `;
 
 class BenniMediaApp extends HTMLElement {
@@ -100,6 +112,8 @@ class BenniMediaApp extends HTMLElement {
     this._raw = false;
     this._search = "";
     this._last = {};       // tab -> letzte gerenderte Signatur (Flicker-Schutz)
+    this._radioQuery = ""; // Radio-Suche (MA) — Eingabe + Treffer als Component-State,
+    this._radioResults = null;  // damit sie den 3s-Refresh überleben.
   }
 
   set hass(h) { this._hass = h; if (!this._timer) { this._tick(); this._timer = setInterval(() => this._tick(), 3000); } }
@@ -156,6 +170,23 @@ class BenniMediaApp extends HTMLElement {
     // Sofort frisch ziehen, damit der neue Zustand erscheint (kein 3s-Warten).
     this._last[this._tab] = null;
     await this._tick();
+  }
+
+  async _searchRadio(query) {
+    if (!this._hass) return;
+    this._radioQuery = query || "";
+    if (!this._radioQuery.trim()) { this._radioResults = null; this._safeRender(); return; }
+    try {
+      const res = await this._hass.callWS({
+        type: WS_ACTION, module: "apply", action: "search_radio",
+        params: { query: this._radioQuery },
+      });
+      this._radioResults = (res && res.result && res.result.results) || [];
+    } catch (e) {
+      this._radioResults = [];
+      this._toast("Suche fehlgeschlagen: " + (e.message || e), true);
+    }
+    this._safeRender();
   }
 
   _safeRender() {
@@ -230,6 +261,13 @@ class BenniMediaApp extends HTMLElement {
     if ($("refresh")) $("refresh").onclick = () => this._tick();
     if ($("refresh2")) $("refresh2").onclick = () => this._tick();
     if ($("search")) $("search").oninput = (e) => { this._search = e.target.value; this._filter(); };
+    // Radio-Suche (MA): Eingabe puffern, Suchen/Enter ruft die Action, ✕ leert.
+    if ($("radioq")) {
+      $("radioq").oninput = (e) => { this._radioQuery = e.target.value; };
+      $("radioq").onkeydown = (e) => { if (e.key === "Enter") this._searchRadio(this._radioQuery); };
+    }
+    if ($("radiosearch")) $("radiosearch").onclick = () => this._searchRadio(this._radioQuery);
+    if ($("radioclear")) $("radioclear").onclick = () => { this._radioResults = null; this._radioQuery = ""; this._safeRender(); };
     const cp = (id, getText) => {
       const b = $(id);
       if (!b) return;
@@ -430,6 +468,26 @@ class BenniMediaApp extends HTMLElement {
     const plan = d.plan || {}, gate = d.gates || {}, dev = d.devices || {}, nl = d.nachlauf || {};
     const db = d.debounce || {}, pp = db.plan || null;
     const live = !!d.execute;
+    const radioDefaults = (d.radio && d.radio.defaults) || [];
+    const radioBtn = (name, uri, extra) =>
+      `<button class="act${extra || ""}" data-act="apply:play_radio" data-params='${esc(JSON.stringify({ media_id: uri }))}'>${esc(name)}</button>`;
+    const results = (this._radioResults || []).map((r) =>
+      `<div class="radio-hit" data-srch="${esc(r.name)}">
+        ${r.image ? `<img src="${esc(r.image)}" loading="lazy" alt="">` : `<span class="radio-ph">📻</span>`}
+        <span class="radio-name">${esc(r.name)}${r.favorite ? " ★" : ""}</span>
+        ${radioBtn("▶", r.uri, " mini")}
+      </div>`).join("");
+    const radioCard = `
+      <div class="card" style="margin-top:14px;"><h2>Radio</h2>
+        <div class="mut">Shortcut spielt sofort (manuell, unabhängig vom Shadow-Gate).</div>
+        <div class="radio-shortcuts">${radioDefaults.map((s) => radioBtn(s.name, s.uri)).join("") || `<span class="mut">Keine Default-Sender.</span>`}</div>
+        <div class="radio-search">
+          <input id="radioq" type="text" placeholder="Sender suchen (Music Assistant)…" value="${esc(this._radioQuery)}">
+          <button id="radiosearch">Suchen</button>
+          ${this._radioResults != null ? `<button id="radioclear" class="mini">✕</button>` : ""}
+        </div>
+        ${this._radioResults != null ? `<div class="radio-results">${results || `<div class="mut">Keine Treffer.</div>`}</div>` : ""}
+      </div>`;
     const ppRow = pp
       ? `<div class="row"><span class="k">Nächste Aktion</span><span class="v">${esc(pp.homepods_action || "—")} · HP ${pct(pp.homepods_target)} · Denon ${pct(pp.denon_target)}${pp.subwoofer_set != null ? " · Sub " + yn(pp.subwoofer_set) : ""}${pp.quiet_override ? " · quiet" : ""}</span></div>`
       : `<div class="mut">Kein gepufferter Plan.</div>`;
@@ -455,6 +513,7 @@ class BenniMediaApp extends HTMLElement {
         ${ppRow}
         <div class="mut">Trigger-Bursts werden zu einer Aktion konsolidiert · Quiet bricht sofort durch</div>
       </div>
+      ${radioCard}
       <div class="card" style="margin-top:14px;"><h2>Denon-Nachlauf</h2>${this._rows(nl, ["active", "pc_armed", "tv_armed", "tv_paused", "pc_power_on", "tv_power_on", "bio_sleep"])}</div>`;
   }
 
