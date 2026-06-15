@@ -154,10 +154,39 @@ def get_apply(hass: HomeAssistant) -> dict[str, Any]:
     return _single(hass, "apply", "media.apply")
 
 
+def _resolve_bindings(hass: HomeAssistant, bmap: Any) -> list[dict[str, Any]]:
+    """Bindings (key→entity_id) gegen die Live-States auflösen → Status je Slot."""
+    out: list[dict[str, Any]] = []
+    for key, eid in (bmap or {}).items() if isinstance(bmap, dict) else []:
+        if isinstance(eid, (list, tuple)):
+            eid = ", ".join(str(e) for e in eid if e) or None
+        if not eid or not isinstance(eid, str):
+            out.append({"key": key, "entity_id": eid or None, "state": None, "status": "unbound"})
+            continue
+        st = hass.states.get(eid)
+        if st is None:
+            out.append({"key": key, "entity_id": eid, "state": None, "status": "missing"})
+        elif st.state in ("unknown", "unavailable"):
+            out.append({"key": key, "entity_id": eid, "state": st.state, "status": "unavailable"})
+        else:
+            out.append({"key": key, "entity_id": eid, "state": st.state, "status": "bound"})
+    return sorted(out, key=lambda b: b["key"])
+
+
 def get_diagnostics(hass: HomeAssistant) -> dict[str, Any]:
     snaps = _all_snaps(hass)
+    bindings = {
+        k: _resolve_bindings(hass, _g(v["data"], "bindings", default={}))
+        for k, v in snaps.items()
+    }
+    issues = [
+        {"module": k, **b}
+        for k, lst in bindings.items() for b in lst
+        if b["status"] != "bound"
+    ]
     data = {
-        "bindings": {k: _g(v["data"], "bindings", default={}) for k, v in snaps.items()},
+        "bindings": bindings,
+        "issues": issues,
         "raw": {k: v["data"] for k, v in snaps.items()},
     }
     return _envelope({k: _module_health(v) for k, v in snaps.items()}, data)

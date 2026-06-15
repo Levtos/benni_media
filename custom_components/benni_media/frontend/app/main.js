@@ -381,8 +381,25 @@ class BenniMediaApp extends HTMLElement {
     const mods = env.modules || {};
     const modRows = Object.entries(mods).map(([k, v]) =>
       `<div class="row" data-srch="${esc(k)}"><span class="k">${esc(k)}</span><span class="v ${v.healthy ? "sev-ok" : v.available ? "sev-warn" : "sev-blocked"}">${v.available ? (v.healthy ? "healthy" : "degraded") : "missing"}${v.error ? " · " + esc(v.error) : ""}</span></div>`).join("");
+    const sevCls = (s) => s === "bound" ? "sev-ok" : s === "unavailable" ? "sev-warn" : s === "missing" ? "sev-blocked" : "mut";
+    const bind = d.bindings || {};
+    const issues = d.issues || [];
+    const bindCard = (mod) => {
+      const rows = (bind[mod] || []).map((b) =>
+        `<div class="row" data-srch="${esc(b.key)} ${esc(b.entity_id)} ${esc(b.status)}"><span class="k">${esc(b.key)}</span><span class="vwrap"><span class="v">${esc(b.entity_id || "—")}</span><span class="hint ${sevCls(b.status)}">${esc(b.status)}${b.state != null ? " · " + esc(b.state) : ""}</span></span></div>`).join("");
+      return `<div class="card"><h2>Bindings · ${mod}</h2>${rows || `<div class="mut">—</div>`}</div>`;
+    };
+    const issueRows = issues.length
+      ? issues.map((i) => `<div class="${sevCls(i.status)}" data-srch="${esc(i.module)} ${esc(i.key)} ${esc(i.entity_id)}" style="padding:3px 0;font-size:13px;">● ${esc(i.module)} · ${esc(i.key)} → ${esc(i.entity_id || "(unbound)")} <b>[${esc(i.status)}]</b></div>`).join("")
+      : `<div class="sev-ok">Alle Bindings ok ✓</div>`;
     return `
-      <div class="card"><h2>Modulstatus</h2>${modRows || `<div class="mut">—</div>`}</div>
+      <div class="grid two">
+        <div class="card"><h2>Modulstatus</h2>${modRows || `<div class="mut">—</div>`}</div>
+        <div class="card"><h2>Binding-Probleme (${issues.length})</h2>${issueRows}</div>
+      </div>
+      <div class="grid" style="grid-template-columns:1fr 1fr 1fr; margin-top:14px;">
+        ${bindCard("state")}${bindCard("policy")}${bindCard("apply")}
+      </div>
       <div class="card" style="margin-top:14px;"><h2>Raw Snapshots <button id="copyraw" style="float:right;margin-top:-4px;">Copy JSON</button></h2><pre>${esc(JSON.stringify(d.raw || {}, null, 2))}</pre></div>`;
   }
 }
