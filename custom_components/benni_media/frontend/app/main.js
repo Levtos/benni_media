@@ -15,6 +15,7 @@ const TABS = [
   ["diagnostics", "Diagnostics", "Bindings, Fehler & Rohdaten", "benni_media/get_diagnostics"],
 ];
 const TAB_BY = Object.fromEntries(TABS.map((t) => [t[0], t]));
+const WS_ACTION = "benni_media/action";
 
 const esc = (s) => String(s == null ? "" : s)
   .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -76,6 +77,19 @@ button.on { background:#2d3a2e; border-color:#9ece6a55; color:#9ece6a; }
 pre { background:#16161e; border-radius:10px; padding:12px; overflow:auto; font-size:11px; color:#a9b1d6; margin:8px 0 0; max-height:420px; }
 .mut { color:#565f89; font-size:11px; }
 .err { color:#f7768e; padding:20px; }
+.actbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:4px; }
+.actbar .nudgeval { font-size:18px; font-weight:600; color:#7dcfff; min-width:64px; text-align:center; }
+button.arm { background:#2d3a2e; border-color:#9ece6a55; color:#9ece6a; font-weight:600; }
+button.disarm { background:#3a3326; border-color:#e0af6855; color:#e0af68; font-weight:600; }
+button.act { padding:7px 14px; }
+button.danger:hover { border-color:#f7768e; }
+button:disabled { opacity:.5; cursor:wait; }
+.toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%);
+  background:#24283b; border:1px solid #7aa2f7; color:#c0caf5; padding:9px 16px;
+  border-radius:10px; font-size:13px; z-index:99; opacity:0; transition:opacity .2s;
+  pointer-events:none; max-width:80vw; }
+.toast.show { opacity:1; }
+.toast.bad { border-color:#f7768e; color:#f7768e; }
 `;
 
 class BenniMediaApp extends HTMLElement {
@@ -118,6 +132,30 @@ class BenniMediaApp extends HTMLElement {
       this.shadowRoot.appendChild(ta); ta.focus(); ta.select();
       const ok = document.execCommand("copy"); this.shadowRoot.removeChild(ta); return ok;
     } catch (e) { console.error("copy failed", e); return false; }
+  }
+
+  _toast(msg, bad) {
+    let t = this.shadowRoot.getElementById("toast");
+    if (!t) {
+      t = document.createElement("div"); t.id = "toast"; t.className = "toast";
+      this.shadowRoot.appendChild(t);
+    }
+    t.textContent = msg; t.className = "toast show" + (bad ? " bad" : "");
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => { t.className = "toast"; }, 1800);
+  }
+
+  async _action(module, action, params) {
+    if (!this._hass) return;
+    try {
+      const res = await this._hass.callWS({ type: WS_ACTION, module, action, params: params || {} });
+      this._toast("✓ " + action + (res && res.result ? "" : ""));
+    } catch (e) {
+      this._toast("Fehler: " + (e.message || e), true);
+    }
+    // Sofort frisch ziehen, damit der neue Zustand erscheint (kein 3s-Warten).
+    this._last[this._tab] = null;
+    await this._tick();
   }
 
   _safeRender() {
@@ -169,6 +207,8 @@ class BenniMediaApp extends HTMLElement {
         <button id="raw" class="${this._raw ? "on" : ""}">Raw</button>
         <button id="refresh">Refresh</button>
         <button id="copy">Copy Diagnostics</button>
+        ${applyEnabled == null ? "" :
+          `<button class="${applyEnabled ? "disarm" : "arm"}" data-act="apply:set_apply_enabled" data-params='{"value":${applyEnabled ? "false" : "true"}}'>${applyEnabled ? "■ Apply scharf — Not-Aus" : "▶ Apply scharf schalten"}</button>`}
       </div>`;
 
     let body;
@@ -203,6 +243,18 @@ class BenniMediaApp extends HTMLElement {
     cp("copy", () => JSON.stringify(this._data[this._tab] || {}, null, 2));
     cp("copyraw", () => JSON.stringify((this._data[this._tab]?.data?.raw) || {}, null, 2));
     cp("copyenv", () => JSON.stringify(this._data[this._tab] || {}, null, 2));
+    // Quick-Actions: jedes [data-act="module:action"] (+ optional data-params JSON).
+    this.shadowRoot.querySelectorAll("[data-act]").forEach((el) => {
+      el.onclick = async () => {
+        const [module, action] = (el.dataset.act || "").split(":");
+        if (!module || !action) return;
+        let params = {};
+        try { params = el.dataset.params ? JSON.parse(el.dataset.params) : {}; } catch (e) { /* leer */ }
+        el.disabled = true;
+        await this._action(module, action, params);
+        el.disabled = false;
+      };
+    });
     this._filter();
   }
 
@@ -282,6 +334,12 @@ class BenniMediaApp extends HTMLElement {
           ${tile("Subwoofer", t.subwoofer_allowed ? "erlaubt" : "gesperrt", t.subwoofer_allowed)}
         </div>
       </div>
+      <div class="card" style="margin-top:14px;"><h2>Quick-Actions</h2>
+        <div class="actbar">
+          <button class="act" data-act="state:toggle_private">Privat / Besuch umschalten</button>
+          <span class="mut">${d.audio_owner === "private" ? "aktuell: privat (gedämpft)" : "schaltet den manuellen private_time-Trigger (FLEET-44)"}</span>
+        </div>
+      </div>
       <div class="card" style="margin-top:14px;"><h2>Geräte</h2>${this._devices(d.devices)}</div>`;
   }
 
@@ -332,11 +390,24 @@ class BenniMediaApp extends HTMLElement {
         <div class="row"><span class="k">Track-Boost</span><span class="v">${sgn(o.track_boost)}</span></div>
         <div class="row"><span class="k" style="color:#7dcfff;">→ Result</span><span class="v soll">${pct(o.result)}</span></div>
       </div>`;
+    const nu = d.nudge || null;
+    const nudgeCard = !nu ? "" : `
+      <div class="card" style="margin-top:14px;"><h2>Lautstärke-Nudge (R21/R22)</h2>
+        <div class="actbar">
+          <button class="act" data-act="policy:nudge_volume" data-params='{"delta":-0.05}'>– leiser</button>
+          <span class="nudgeval">${sgn(nu.manual_nudge)}</span>
+          <button class="act" data-act="policy:nudge_volume" data-params='{"delta":0.05}'>+ lauter</button>
+          <button class="act" data-act="policy:reset_nudge">Reset</button>
+          <button class="act danger" data-act="policy:reset_boost" ${nu.boost_active ? "" : "disabled"}>Boost-Reset${nu.boost_suppressed ? " ✓" : ""}</button>
+        </div>
+        <div class="mut" style="margin-top:6px;">Nudge wirkt auf die spielende Seite (${sgn(nu.min)}…${sgn(nu.max)}). Boost-Reset dämpft den aktuellen Track-Boost bis zum Trackwechsel.${nu.boost_suppressed ? " · aktuell unterdrückt" : ""}</div>
+      </div>`;
     return `
       <div class="card hero"><h2>Decision Engine</h2>
         <div class="kpi acc">${esc(d.volume_policy || "—")}</div>
         <div class="mut">Audio: ${esc(d.audio_owner || "—")} · Aktion: ${esc(d.action || "—")}${d.is_grind ? " · GRIND" : ""}${d.track_boost_applied ? " · Boost" : ""}${d.music_muted ? " · Mute" : ""}</div>
       </div>
+      ${nudgeCard}
       <div class="grid two" style="margin-top:14px;">
         <div class="card"><h2>Why-Stack (Reasons)</h2>${why}</div>
         <div class="card"><h2>Volume-Ziele</h2>

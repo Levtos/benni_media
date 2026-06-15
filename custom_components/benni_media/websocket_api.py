@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 
 from . import aggregator
 from .const import (
+    WS_ACTION,
     WS_GET_APPLY,
     WS_GET_DIAGNOSTICS,
     WS_GET_OVERVIEW,
@@ -35,3 +36,23 @@ def async_setup_websocket_api(hass: HomeAssistant) -> None:
         (WS_GET_DIAGNOSTICS, aggregator.get_diagnostics),
     ):
         websocket_api.async_register_command(hass, _make(ws_type, fn))
+
+    @websocket_api.websocket_command(
+        {
+            vol.Required("type"): WS_ACTION,
+            vol.Required("module"): str,
+            vol.Required("action"): str,
+            vol.Optional("params", default=dict): dict,
+        }
+    )
+    @websocket_api.async_response
+    async def ws_action(hass, connection, msg) -> None:
+        try:
+            result = await aggregator.dispatch_action(
+                hass, msg["module"], msg["action"], msg.get("params") or {}
+            )
+            connection.send_result(msg["id"], {"ok": True, "result": result})
+        except Exception as err:  # noqa: BLE001 — Fehler sauber an die UX, kein Crash
+            connection.send_error(msg["id"], "action_failed", str(err))
+
+    websocket_api.async_register_command(hass, ws_action)

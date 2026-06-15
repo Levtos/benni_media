@@ -14,7 +14,15 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .const import APPLY_DOMAIN, COORD_KEY, CONTRACT, MODULE_DOMAINS, POLICY_DOMAIN, STATE_DOMAIN
+from .const import (
+    APPLY_DOMAIN,
+    COORD_KEY,
+    CONTRACT,
+    MODULE_DOMAINS,
+    POLICY_DOMAIN,
+    PRIVATE_BINDING_KEY,
+    STATE_DOMAIN,
+)
 
 
 def _coordinator(hass: HomeAssistant, domain: str):
@@ -190,3 +198,45 @@ def get_diagnostics(hass: HomeAssistant) -> dict[str, Any]:
         "raw": {k: v["data"] for k, v in snaps.items()},
     }
     return _envelope({k: _module_health(v) for k, v in snaps.items()}, data)
+
+
+# --------------------------------------------------------------------------- #
+# Write-Gateway: Quick-Actions ans richtige Modul durchreichen. Allow-List —
+# kein generischer Methoden-/Service-Zugriff. Selbst KEINE Business-Logik; nur
+# Dispatch auf die veröffentlichten Coordinator-Methoden der Module.
+# --------------------------------------------------------------------------- #
+async def dispatch_action(
+    hass: HomeAssistant, module: str, action: str, params: dict[str, Any] | None
+) -> dict[str, Any]:
+    params = params or {}
+    domain = MODULE_DOMAINS.get(module)
+    if domain is None:
+        raise ValueError(f"unknown module: {module}")
+    coord = _coordinator(hass, domain)
+    if coord is None:
+        raise ValueError(f"{domain} not loaded")
+
+    if module == "policy":
+        if action == "nudge_volume":
+            return {"manual_nudge": coord.async_nudge_volume(float(params["delta"]))}
+        if action == "reset_nudge":
+            coord.async_reset_nudge()
+            return {"manual_nudge": 0.0}
+        if action == "reset_boost":
+            coord.async_reset_boost()
+            return {"boost_suppressed": True}
+    elif module == "apply":
+        if action == "set_apply_enabled":
+            await coord.async_set_apply_enabled(bool(params["value"]))
+            return {"apply_enabled": bool(params["value"])}
+    elif module == "state":
+        if action == "toggle_private":
+            entity = (coord.bindings() or {}).get(PRIVATE_BINDING_KEY)
+            if not entity:
+                raise ValueError("private_manual nicht gebunden")
+            await hass.services.async_call(
+                "homeassistant", "toggle", {"entity_id": entity}, blocking=True
+            )
+            return {"toggled": entity}
+
+    raise ValueError(f"unknown action: {module}/{action}")

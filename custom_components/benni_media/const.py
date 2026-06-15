@@ -42,6 +42,13 @@ WS_GET_STATE: Final[str] = f"{DOMAIN}/get_state"
 WS_GET_POLICY: Final[str] = f"{DOMAIN}/get_policy"
 WS_GET_APPLY: Final[str] = f"{DOMAIN}/get_apply"
 WS_GET_DIAGNOSTICS: Final[str] = f"{DOMAIN}/get_diagnostics"
+# Write-Gateway: Quick-Actions aus dem Cockpit an die Modul-Coordinator
+# durchreichen (Allow-List im aggregator, kein generischer Service-Zugriff).
+WS_ACTION: Final[str] = f"{DOMAIN}/action"
+
+# Binding-Key in media_state für den manuellen private_time-Schalter (FLEET-44).
+# Contract-Kopplung (kein Import) — muss zu media_state.const.CONF_PRIVATE_MANUAL passen.
+PRIVATE_BINDING_KEY: Final[str] = "private_manual_entity"
 
 # Panel.
 PANEL_URL_PATH: Final[str] = "benni_media"
