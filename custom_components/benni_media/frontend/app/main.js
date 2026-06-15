@@ -428,7 +428,11 @@ class BenniMediaApp extends HTMLElement {
     if (!m.available || !env.data) return this._missingCard("Apply", m.error || "no apply data received");
     const d = env.data;
     const plan = d.plan || {}, gate = d.gates || {}, dev = d.devices || {}, nl = d.nachlauf || {};
+    const db = d.debounce || {}, pp = db.plan || null;
     const live = !!d.execute;
+    const ppRow = pp
+      ? `<div class="row"><span class="k">Nächste Aktion</span><span class="v">${esc(pp.homepods_action || "—")} · HP ${pct(pp.homepods_target)} · Denon ${pct(pp.denon_target)}${pp.subwoofer_set != null ? " · Sub " + yn(pp.subwoofer_set) : ""}${pp.quiet_override ? " · quiet" : ""}</span></div>`
+      : `<div class="mut">Kein gepufferter Plan.</div>`;
     const devRow = (nm, o) => o ? `<div class="row" data-srch="${esc(nm)}"><span class="k">${esc(nm)}</span><span class="v">${esc(o.state ?? "—")}${o.volume != null ? " · " + pct(o.volume) : ""}</span></div>` : "";
     const log = (d.log || []).map((e) =>
       `<div data-srch="${esc(e.action)}">${esc((e.ts || "").slice(11, 19))} · ${esc(e.action || "—")} ${e.homepods_target != null ? "HP→" + pct(e.homepods_target) : ""} ${e.denon_target != null ? "Denon→" + pct(e.denon_target) : ""} <span class="${e.executed ? "sev-ok" : "sev-warn"}">${e.executed ? "live" : "shadow"}</span></div>`).join("");
@@ -443,6 +447,13 @@ class BenniMediaApp extends HTMLElement {
           <div class="mut">Ramp ${num(d.ramp_step)}/${num(d.ramp_total)} · Quiet-Override ${yn(plan.quiet_override)}</div>
         </div>
         <div class="card"><h2>Apply-Log</h2><div class="log">${log || `<div class="mut">Noch keine Aktionen.</div>`}</div></div>
+      </div>
+      <div class="card" style="margin-top:14px;"><h2>Debounce / Queue</h2>
+        <div class="row"><span class="k">Status</span><span class="v">${db.pending ? "wartet" : "Leerlauf"}</span></div>
+        <div class="row"><span class="k">Fenster</span><span class="v">${num(db.window_s)} s</span></div>
+        <div class="row"><span class="k">Restzeit</span><span class="v">${db.remaining_s != null ? db.remaining_s + " s" : "—"}</span></div>
+        ${ppRow}
+        <div class="mut">Trigger-Bursts werden zu einer Aktion konsolidiert · Quiet bricht sofort durch</div>
       </div>
       <div class="card" style="margin-top:14px;"><h2>Denon-Nachlauf</h2>${this._rows(nl, ["active", "pc_armed", "tv_armed", "tv_paused", "pc_power_on", "tv_power_on", "bio_sleep"])}</div>`;
   }
