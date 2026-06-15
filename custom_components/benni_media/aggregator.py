@@ -229,6 +229,14 @@ async def dispatch_action(
         if action == "set_apply_enabled":
             await coord.async_set_apply_enabled(bool(params["value"]))
             return {"apply_enabled": bool(params["value"])}
+        if action == "play_radio":
+            # Manueller Sender-Shortcut → spielt sofort (Shadow-Bypass im Coordinator).
+            return await coord.async_play_radio(str(params["media_id"]))
+        if action == "search_radio":
+            results = await coord.async_search_radio(
+                str(params.get("query", "")), params.get("limit")
+            )
+            return {"results": results}
     elif module == "state":
         if action == "toggle_private":
             entity = (coord.bindings() or {}).get(PRIVATE_BINDING_KEY)
