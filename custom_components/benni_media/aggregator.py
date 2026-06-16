@@ -120,6 +120,11 @@ def get_overview(hass: HomeAssistant) -> dict[str, Any]:
         "gaming_source": _g(st, "gaming_source"),
         "gaming_platform": _g(st, "gaming_platform"),
         "audio_owner": _g(pol, "audio_owner"),
+        # Desired-Audio-Wahrheit (media_policy ≥ 0.7.0): immer-wahres Soll aus der
+        # Konstellation (Musik-Baseline statt „idle"). Hero zeigt das statt media_context.
+        "audio_scenario": _g(pol, "audio_scenario"),
+        "audio_scenario_label": _g(pol, "audio_scenario_label"),
+        "audio_scenario_detail": _g(pol, "audio_scenario_detail"),
         "action": _first(_g(pol, "action"), _g(ap, "plan", "homepods_action")),
         "volume_policy": _g(pol, "volume_policy"),
         "apply_enabled": _g(ap, "apply_enabled"),
