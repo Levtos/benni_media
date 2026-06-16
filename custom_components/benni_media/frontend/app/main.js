@@ -352,17 +352,42 @@ class BenniMediaApp extends HTMLElement {
     const d = env.data || {};
     const t = d.targets || {};
     const tile = (nm, vl, on) => `<div class="tile ${on ? "on" : "off"}" data-srch="${esc(nm)} ${esc(vl)}"><div class="nm">${esc(nm)}</div><div class="vl">${esc(vl)}</div></div>`;
+    // Volume-Formel-Breakdown (media_policy status().volume_formula) → Soll-Karten.
+    const vf = (((d.raw || {}).policy || {}).volume_formula) || {};
+    const sgn = (v) => (v == null ? "—" : (v > 0 ? "+" : "") + pct(v));
+    const sollCard = (title, o, fb) => {
+      // Fällt zurück auf den nackten Soll-Wert, falls keine Formel-Daten da sind.
+      if (!o) return `<div class="card"><h2>${title}</h2><div class="kpi">${pct(fb)}</div></div>`;
+      const mod = (label, v) => {
+        const c = v == null || v === 0 ? "#6b7494" : (v < 0 ? "#f7768e" : "#9ece6a");
+        return `<div class="row" data-srch="${esc(label)} ${esc(sgn(v))}"><span class="k">${label}</span><span class="v" style="color:${c};">${sgn(v)}</span></div>`;
+      };
+      return `<div class="card"><h2>${title}</h2>
+        <div class="row" data-srch="Basis ${esc(pct(o.base))}"><span class="k">Basis</span><span class="v">${pct(o.base)}</span></div>
+        ${mod("Szenario", o.scenario_offset)}
+        ${mod("Fenster", o.window_offset)}
+        ${mod("Aktivität", o.activity_offset)}
+        ${mod("Nudge", o.manual_nudge)}
+        ${mod("Boost", o.track_boost)}
+        <div style="border-top:1px solid #2a2e3f;margin-top:10px;padding-top:10px;">
+          <span class="kpi" style="color:#7dcfff;">${pct(o.result)}</span>
+          <span class="mut" style="margin-left:10px;">Aktuelles Zielvolumen${o.plays ? "" : " · spielt nicht"}</span>
+        </div>
+      </div>`;
+    };
     return `
       <div class="card hero"><h2>Aktuelles Szenario</h2>
         <div class="kpi acc">${esc(d.scenario || "—")}</div>
         <div class="mut">${esc(d.subcontext || "—")} · Gerät ${esc(d.device || "—")} · Gaming ${esc(d.gaming_source || "—")}</div>
         ${d.now_playing && d.now_playing.title ? `<div style="margin-top:8px;color:#9ece6a;font-size:14px;">♪ ${esc(d.now_playing.title)}${d.now_playing.artist ? " — " + esc(d.now_playing.artist) : ""}${d.now_playing.volume != null ? " · " + pct(d.now_playing.volume) : ""} <span class="mut">(${esc(d.now_playing.device)})</span></div>` : ""}
       </div>
-      <div class="grid cols" style="margin-top:14px;">
+      <div class="grid two" style="margin-top:14px;">
         <div class="card"><h2>Audio Owner</h2><div class="kpi">${esc(d.audio_owner || "—")}</div><div class="mut">Aktion: ${esc(d.action || "—")}</div></div>
         <div class="card"><h2>Volume Policy</h2><div class="kpi">${esc(d.volume_policy || "—")}</div></div>
-        <div class="card"><h2>HomePods Soll</h2><div class="kpi">${pct(t.homepods_volume)}</div></div>
-        <div class="card"><h2>Denon Soll</h2><div class="kpi">${pct(t.denon_volume)}</div></div>
+      </div>
+      <div class="grid two" style="margin-top:14px;">
+        ${sollCard("HomePods Soll", vf.homepods, t.homepods_volume)}
+        ${sollCard("Denon Soll", vf.denon, t.denon_volume)}
       </div>
       <div class="card" style="margin-top:14px;"><h2>Status</h2>
         <div class="tiles">
