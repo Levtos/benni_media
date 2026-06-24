@@ -12,6 +12,7 @@ const TABS = [
   ["state", "State", "Kontext-Erkennung & Gerätestatus", "benni_media/get_state"],
   ["policy", "Policy", "Entscheidungen & Zielwerte", "benni_media/get_policy"],
   ["apply", "Apply", "Ausführung, Queue & Ist/Soll", "benni_media/get_apply"],
+  ["matrix", "Matrix", "Volume-Matrix · Tagesphase/Szenario/Aktivität", "benni_media_policy/get_matrix"],
   ["diagnostics", "Diagnostics", "Bindings, Fehler & Rohdaten", "benni_media/get_diagnostics"],
 ];
 const TAB_BY = Object.fromEntries(TABS.map((t) => [t[0], t]));
@@ -172,6 +173,30 @@ class BenniMediaApp extends HTMLElement {
     await this._tick();
   }
 
+  // FLEET-102: eine Matrix-Zelle setzen (Prozent-Eingabe → Bruch). Leer = null
+  // (Override löschen → zurück auf Default). set_matrix gibt die neue Matrix zurück.
+  async _setMatrixCell(dim, device, key, pctVal) {
+    if (!this._hass) return;
+    let val;
+    if (pctVal === "" || pctVal == null) { val = null; }
+    else { const n = Number(pctVal); if (Number.isNaN(n)) { this._toast("Ungültig", true); return; } val = Math.round(n) / 100; }
+    const patch = { [dim]: { [device]: { [key]: val } } };
+    try {
+      this._data[this._tab] = await this._hass.callWS({ type: "benni_media_policy/set_matrix", patch });
+      this._toast("✓ gespeichert");
+      this._last[this._tab] = null; this._safeRender();
+    } catch (e) { this._toast("Fehler: " + (e.message || e), true); }
+  }
+
+  async _resetMatrix() {
+    if (!this._hass) return;
+    try {
+      this._data[this._tab] = await this._hass.callWS({ type: "benni_media_policy/reset_matrix" });
+      this._toast("Matrix auf Defaults zurückgesetzt");
+      this._last[this._tab] = null; this._safeRender();
+    } catch (e) { this._toast("Fehler: " + (e.message || e), true); }
+  }
+
   async _searchRadio(query) {
     if (!this._hass) return;
     this._radioQuery = query || "";
@@ -293,6 +318,13 @@ class BenniMediaApp extends HTMLElement {
         el.disabled = false;
       };
     });
+    // FLEET-102 Matrix-Editor: jede Zelle speichert onchange; Reset-Button.
+    this.shadowRoot.querySelectorAll(".mxin").forEach((el) => {
+      el.onchange = () => this._setMatrixCell(el.dataset.dim, el.dataset.device, el.dataset.key, el.value);
+    });
+    if (this.shadowRoot.getElementById("mxreset")) {
+      this.shadowRoot.getElementById("mxreset").onclick = () => this._resetMatrix();
+    }
     this._filter();
   }
 
@@ -540,6 +572,46 @@ class BenniMediaApp extends HTMLElement {
       </div>
       ${radioCard}
       <div class="card" style="margin-top:14px;"><h2>Denon-Nachlauf</h2>${this._rows(nl, ["active", "pc_armed", "tv_armed", "tv_paused", "pc_power_on", "tv_power_on", "bio_sleep"])}</div>`;
+  }
+
+  _tab_matrix(env) {
+    if (!env || !env.catalog) return this._missingCard("Volume-Matrix", "media_policy ≥ 0.11.0 nötig (get_matrix/set_matrix)");
+    const cat = env.catalog;
+    const devs = (cat.devices && cat.devices.length) ? cat.devices : ["homepods", "denon"];
+    const dlabel = { homepods: "HomePods", denon: "Denon" };
+    const slabel = cat.scenario_labels || {};
+    const ov = env.override || {};
+    const isOv = (dim, dev, key) => !!(ov[dim] && ov[dim][dev] && ov[dim][dev][key] !== undefined);
+    const valOf = (dim, dev, key) => {
+      const t = env[dim] && env[dim][dev];
+      if (t && t[key] != null) return t[key];
+      return dim === "base" ? null : 0;
+    };
+    const cell = (dim, dev, key) => {
+      const raw = valOf(dim, dev, key);
+      const v = raw == null ? "" : Math.round(Number(raw) * 100);
+      const ovr = isOv(dim, dev, key);
+      return `<input class="mxin" type="number" step="1" inputmode="numeric"`
+        + ` data-dim="${dim}" data-device="${dev}" data-key="${esc(key)}" value="${v}"`
+        + ` style="width:60px;background:#11131c;color:${ovr ? "#7dcfff" : "#e6e6e6"};border:1px solid ${ovr ? "#3b5bdb" : "#2a2e42"};border-radius:6px;padding:4px 6px;font:inherit;text-align:right;"`
+        + ` title="${esc(key)} · ${dlabel[dev] || dev}${ovr ? " · override" : " · default"}">`;
+    };
+    const table = (dim, rowKeys, rowLabel) => {
+      if (!rowKeys || !rowKeys.length) return `<div class="mut">— keine Einträge —</div>`;
+      const head = `<tr><th style="text-align:left;padding:3px 8px;color:#6b7299;">Schlüssel</th>${devs.map((d) => `<th style="text-align:right;padding:3px 8px;color:#6b7299;">${dlabel[d] || d}</th>`).join("")}</tr>`;
+      const body = rowKeys.map((k) =>
+        `<tr><td style="padding:3px 8px;color:#9aa4c7;">${esc(rowLabel ? (rowLabel[k] || k) : k)}</td>${devs.map((d) => `<td style="text-align:right;padding:3px 8px;">${cell(dim, d, k)}</td>`).join("")}</tr>`).join("");
+      return `<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead>${head}</thead><tbody>${body}</tbody></table>`;
+    };
+    return `
+      <div class="card"><h2>Volume-Matrix <button id="mxreset" class="act danger" style="float:right;margin-top:-4px;">Alles auf Default</button></h2>
+        <div class="mut">Werte in Prozent. Base = Grundlautstärke je Tagesphase; Szenario/Aktivität = additive Offsets (±). Leeres Feld = Default. Änderung speichert sofort (persistent). Blau = Override aktiv.</div>
+      </div>
+      <div class="card"><h2>Base · Tagesphase</h2>${table("base", cat.dayphases)}</div>
+      <div class="card"><h2>Szenario-Offset (±)</h2>${table("scenario_off", cat.scenarios, slabel)}</div>
+      <div class="card"><h2>Aktivitäts-Offset (±)</h2>${table("activity_off", cat.activities)}
+        <div class="mut" style="margin-top:6px;">Aktivitäts-Enum lebt in core_state; hier die bekannten Schlüssel. Default 0 = kein Offset.</div>
+      </div>`;
   }
 
   _tab_diagnostics(env) {
