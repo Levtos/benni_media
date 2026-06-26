@@ -27,6 +27,28 @@ const num = (v) => (v == null || v === "" ? "—" : v);
 const DEVICE_ORDER = ["tv", "apple_tv", "ps5", "switch", "pc", "homepods", "denon"];
 const DEVICE_LABEL = { tv: "TV", apple_tv: "Apple TV", ps5: "PS5", switch: "Switch", pc: "PC", homepods: "HomePods", denon: "Denon" };
 
+// FLEET-102 Matrix-Editor: schlanke Inline-SVG-Icons (currentColor, theme-gefärbt).
+const SVG = {
+  sun: '<circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1"/>',
+  moon: '<path d="M13 9.4A5.4 5.4 0 1 1 6.6 3 4.2 4.2 0 0 0 13 9.4z"/>',
+  layers: '<path d="M8 2.2l5.5 2.8L8 7.8 2.5 5 8 2.2z"/><path d="M2.6 8L8 10.8 13.4 8"/><path d="M2.6 11L8 13.8 13.4 11"/>',
+  pulse: '<path d="M1.5 8h3l1.8-4 2.8 8 1.6-4h3.3"/>',
+  power: '<path d="M8 2v6"/><path d="M5 4.3a4.7 4.7 0 1 0 6 0"/>',
+  user: '<circle cx="8" cy="5.5" r="2.4"/><path d="M3.6 13.5a4.4 4.4 0 0 1 8.8 0"/>',
+  gamepad: '<rect x="2" y="5.2" width="12" height="6.6" rx="3.3"/><path d="M5 8.5h2.2M6.1 7.4v2.2"/><circle cx="10.6" cy="8" r=".7"/><circle cx="11.9" cy="9.2" r=".7"/>',
+  tv: '<rect x="2" y="3.6" width="12" height="8" rx="1.4"/><path d="M5.8 14h4.4"/>',
+  music: '<path d="M6 11.5V4l7-1.4V9.6"/><circle cx="4.6" cy="11.6" r="1.5"/><circle cx="11.5" cy="9.9" r="1.5"/>',
+  home: '<path d="M2.8 7.5L8 3l5.2 4.5"/><path d="M4.4 7v6.4h7.2V7"/>',
+  suitcase: '<rect x="3" y="5.6" width="10" height="7.4" rx="1.4"/><path d="M6 5.6V4.2h4v1.4"/>',
+  speaker: '<path d="M3 6.2h2.4L8.6 3.4v9.2L5.4 9.8H3z"/><path d="M10.8 6.6a3 3 0 0 1 0 2.8"/>',
+  sliders: '<path d="M2.2 5.2h11.6M2.2 10.8h11.6"/><circle cx="6" cy="5.2" r="1.7"/><circle cx="10" cy="10.8" r="1.7"/>',
+};
+const ic = (n) => `<svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SVG[n] || ""}</svg>`;
+const NIGHT_PHASES = new Set(["late_evening", "early_night", "late_night"]);
+const SCENARIO_ICON = { off: "power", private: "user", gaming: "gamepad", tv: "tv", music: "music" };
+const ACTIVITY_ICON = { work_home: "home", work_away: "suitcase" };
+const DEVICE_ICON = { homepods: "speaker", denon: "sliders" };
+
 const css = `
 :host { display:block; font-family: ui-sans-serif, system-ui, sans-serif;
   background:#1a1b26; color:#c0caf5; min-height:100vh; box-sizing:border-box; }
@@ -103,6 +125,39 @@ button.mini { padding:4px 9px; font-size:12px; }
 .radio-ph { width:32px; height:32px; display:flex; align-items:center; justify-content:center;
   background:#24283b; border-radius:6px; }
 .radio-name { flex:1; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+/* FLEET-102 Volume-Matrix-Editor */
+.mx-topbar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:12px; }
+.mx-legend { display:flex; gap:14px; align-items:center; flex-wrap:wrap; font-size:11px; color:#787c99; }
+.mx-lg { display:flex; align-items:center; gap:6px; }
+.mx-ldot { width:9px; height:9px; border-radius:3px; display:inline-block; }
+.mx-sec { background:#1f2335; border:1px solid #2a2e42; border-radius:12px; margin-bottom:14px; overflow:hidden; }
+.mx-shead { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid #2a2e42; background:linear-gradient(135deg,rgba(36,27,58,.45),#1f2335); }
+.mx-badge { width:26px; height:26px; border-radius:8px; background:#2a2440; border:1px solid #3b2d5a; color:#bb9af7; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
+.mx-sic { color:#bb9af7; display:flex; align-items:center; }
+.mx-stitle { font-size:14px; font-weight:600; color:#c0caf5; }
+.mx-ssub { font-size:11px; color:#565f89; margin-top:1px; }
+.mx-devcols { display:grid; grid-template-columns:120px 120px; }
+.mx-dev { display:flex; align-items:center; justify-content:flex-end; gap:6px; font-size:12px; color:#9aa5ce; padding-right:14px; }
+.mx-dev svg { color:#7aa2f7; }
+.mx-rows { padding:4px 16px 12px; }
+.mx-row { display:grid; grid-template-columns:1fr 120px 120px; align-items:center; padding:5px 0; border-bottom:1px solid rgba(32,36,52,.6); }
+.mx-row:last-child { border-bottom:0; }
+.mx-rhead { color:#565f89; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid #2a2e42; padding-bottom:7px; margin-bottom:2px; }
+.mx-rlabel { display:flex; align-items:center; gap:9px; font-size:13px; color:#a9b1d6; }
+.mx-rlabel svg { color:#6b7299; flex:0 0 auto; }
+.mx-cell { display:flex; justify-content:flex-end; padding-right:14px; }
+.mx-inwrap { display:flex; align-items:center; background:#16161e; border:1px solid #2a2e42; border-radius:8px; padding:0 7px; width:96px; transition:border-color .12s; }
+.mx-inwrap:focus-within { border-color:#7aa2f7; }
+.mx-inwrap.ovr { border-color:#bb9af7; background:#201c30; }
+.mxin { background:transparent; border:0; color:#c0caf5; padding:6px 2px 6px 8px; font:inherit; font-size:13px; width:100%; text-align:right; appearance:textfield; -moz-appearance:textfield; }
+.mxin::-webkit-inner-spin-button, .mxin::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+.mxin:focus { outline:none; }
+.mx-inwrap.ovr .mxin { color:#bb9af7; }
+.mx-pct { color:#565f89; font-size:12px; flex:0 0 auto; padding:0 1px; }
+.mx-inwrap.ovr .mx-pct { color:#bb9af7aa; }
+.mx-steps { display:flex; flex-direction:column; margin-left:4px; }
+.mx-step { background:transparent; border:0; color:#565f89; font-size:8px; line-height:9px; height:10px; padding:0 2px; cursor:pointer; }
+.mx-step:hover { color:#bb9af7; border-color:transparent; }
 `;
 
 class BenniMediaApp extends HTMLElement {
@@ -318,9 +373,20 @@ class BenniMediaApp extends HTMLElement {
         el.disabled = false;
       };
     });
-    // FLEET-102 Matrix-Editor: jede Zelle speichert onchange; Reset-Button.
+    // FLEET-102 Matrix-Editor: jede Zelle speichert onchange; ▲▼-Stepper; Reset.
     this.shadowRoot.querySelectorAll(".mxin").forEach((el) => {
       el.onchange = () => this._setMatrixCell(el.dataset.dim, el.dataset.device, el.dataset.key, el.value);
+    });
+    this.shadowRoot.querySelectorAll(".mx-step").forEach((el) => {
+      el.onclick = () => {
+        const inp = el.closest(".mx-inwrap") && el.closest(".mx-inwrap").querySelector(".mxin");
+        if (!inp) return;
+        const lo = inp.dataset.dim === "base" ? 0 : -100;
+        const cur = inp.value === "" ? 0 : Math.round(Number(inp.value));
+        const nv = Math.max(lo, Math.min(100, cur + (el.dataset.dir === "up" ? 1 : -1)));
+        inp.value = String(nv);
+        this._setMatrixCell(inp.dataset.dim, inp.dataset.device, inp.dataset.key, inp.value);
+      };
     });
     if (this.shadowRoot.getElementById("mxreset")) {
       this.shadowRoot.getElementById("mxreset").onclick = () => this._resetMatrix();
@@ -591,27 +657,49 @@ class BenniMediaApp extends HTMLElement {
       const raw = valOf(dim, dev, key);
       const v = raw == null ? "" : Math.round(Number(raw) * 100);
       const ovr = isOv(dim, dev, key);
-      return `<input class="mxin" type="number" step="1" inputmode="numeric"`
-        + ` data-dim="${dim}" data-device="${dev}" data-key="${esc(key)}" value="${v}"`
-        + ` style="width:60px;background:#11131c;color:${ovr ? "#7dcfff" : "#e6e6e6"};border:1px solid ${ovr ? "#3b5bdb" : "#2a2e42"};border-radius:6px;padding:4px 6px;font:inherit;text-align:right;"`
-        + ` title="${esc(key)} · ${dlabel[dev] || dev}${ovr ? " · override" : " · default"}">`;
+      return `<div class="mx-cell"><div class="mx-inwrap${ovr ? " ovr" : ""}" title="${esc(key)} · ${dlabel[dev] || dev}${ovr ? " · Override" : " · Default"}">`
+        + `<input class="mxin" type="number" step="1" inputmode="numeric" data-dim="${dim}" data-device="${dev}" data-key="${esc(key)}" value="${v}" placeholder="0">`
+        + `<span class="mx-pct">%</span>`
+        + `<span class="mx-steps"><button class="mx-step" data-dir="up" tabindex="-1">▲</button><button class="mx-step" data-dir="down" tabindex="-1">▼</button></span>`
+        + `</div></div>`;
     };
-    const table = (dim, rowKeys, rowLabel) => {
-      if (!rowKeys || !rowKeys.length) return `<div class="mut">— keine Einträge —</div>`;
-      const head = `<tr><th style="text-align:left;padding:3px 8px;color:#6b7299;">Schlüssel</th>${devs.map((d) => `<th style="text-align:right;padding:3px 8px;color:#6b7299;">${dlabel[d] || d}</th>`).join("")}</tr>`;
-      const body = rowKeys.map((k) =>
-        `<tr><td style="padding:3px 8px;color:#9aa4c7;">${esc(rowLabel ? (rowLabel[k] || k) : k)}</td>${devs.map((d) => `<td style="text-align:right;padding:3px 8px;">${cell(dim, d, k)}</td>`).join("")}</tr>`).join("");
-      return `<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead>${head}</thead><tbody>${body}</tbody></table>`;
-    };
-    return `
-      <div class="card"><h2>Volume-Matrix <button id="mxreset" class="act danger" style="float:right;margin-top:-4px;">Alles auf Default</button></h2>
-        <div class="mut">Werte in Prozent. Base = Grundlautstärke je Tagesphase; Szenario/Aktivität = additive Offsets (±). Leeres Feld = Default. Änderung speichert sofort (persistent). Blau = Override aktiv.</div>
-      </div>
-      <div class="card"><h2>Base · Tagesphase</h2>${table("base", cat.dayphases)}</div>
-      <div class="card"><h2>Szenario-Offset (±)</h2>${table("scenario_off", cat.scenarios, slabel)}</div>
-      <div class="card"><h2>Aktivitäts-Offset (±)</h2>${table("activity_off", cat.activities)}
-        <div class="mut" style="margin-top:6px;">Aktivitäts-Enum lebt in core_state; hier die bekannten Schlüssel. Default 0 = kein Offset.</div>
+    const devhead = `<div class="mx-devcols">${devs.map((d) => `<div class="mx-dev">${ic(DEVICE_ICON[d] || "speaker")}${dlabel[d] || d}</div>`).join("")}</div>`;
+    const section = (n, sicon, title, sub, colLabel, rows) => `
+      <div class="mx-sec">
+        <div class="mx-shead">
+          <div class="mx-badge">${n}</div>
+          <div class="mx-sic">${ic(sicon)}</div>
+          <div><div class="mx-stitle">${esc(title)}</div><div class="mx-ssub">${esc(sub)}</div></div>
+          <div class="spacer"></div>
+          ${devhead}
+        </div>
+        <div class="mx-rows">
+          <div class="mx-row mx-rhead"><div class="mx-rlabel">${esc(colLabel)}</div>${devs.map(() => "<div></div>").join("")}</div>
+          ${rows}
+        </div>
       </div>`;
+    const rowsOf = (dim, keys, labelFn, iconFn) => {
+      if (!keys || !keys.length) return `<div class="mx-row"><div class="mut">— keine Einträge —</div></div>`;
+      return keys.map((k) =>
+        `<div class="mx-row"><div class="mx-rlabel">${iconFn(k)}<span>${esc(labelFn(k))}</span></div>${devs.map((d) => cell(dim, d, k)).join("")}</div>`).join("");
+    };
+    const baseRows = rowsOf("base", cat.dayphases, (k) => k, (k) => ic(NIGHT_PHASES.has(k) ? "moon" : "sun"));
+    const scenRows = rowsOf("scenario_off", cat.scenarios, (k) => slabel[k] || k, (k) => ic(SCENARIO_ICON[k] || "music"));
+    const actRows = rowsOf("activity_off", cat.activities, (k) => k, (k) => ic(ACTIVITY_ICON[k] || "user"));
+    return `
+      <div class="mx-topbar">
+        <div class="mx-legend">
+          <span class="mx-lg"><span class="mx-ldot" style="background:#9ece6a;"></span>Default</span>
+          <span class="mx-lg"><span class="mx-ldot" style="background:#bb9af7;"></span>Override aktiv</span>
+          <span class="mut">Werte in % · leeres Feld = Default · Änderung speichert sofort (persistent)</span>
+        </div>
+        <div class="spacer" style="flex:1;"></div>
+        <button id="mxreset" class="act danger">Alles auf Default</button>
+      </div>
+      ${section(1, "sun", "Basis · Tagesphase", "Grundlautstärke je Tagesphase", "Phase", baseRows)}
+      ${section(2, "layers", "Szenario-Offset (±)", "Additiver Offset je Szenario", "Szenario", scenRows)}
+      ${section(3, "pulse", "Aktivitäts-Offset (±)", "Additiver Offset je Aktivität", "Aktivität", actRows)}
+      <div class="mut" style="margin-top:-4px;">Aktivitäts-Enum lebt in core_state — hier die bekannten Schlüssel. Default 0 = kein Offset.</div>`;
   }
 
   _tab_diagnostics(env) {
