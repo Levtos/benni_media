@@ -108,15 +108,33 @@ def _first(*vals: Any) -> Any:
     return None
 
 
+def _is_idle_overview(st: Any, pol: Any) -> bool:
+    """Overview-only display guard for policy's desired music baseline."""
+    context = _first(_g(st, "media_scenario"), _g(st, "scenario"), _g(st, "context"))
+    if context != "idle":
+        return False
+    if _g(pol, "audio_owner") not in (None, "none"):
+        return False
+    if _g(pol, "volume_policy") != "idle":
+        return False
+    if _g(st, "now_playing") is not None:
+        return False
+    vf = _g(pol, "volume_formula", default={}) or {}
+    return not bool(_g(vf, "homepods", "plays") or _g(vf, "denon", "plays"))
+
+
 def get_overview(hass: HomeAssistant) -> dict[str, Any]:
     snaps = _all_snaps(hass)
     st, pol, ap = snaps["state"]["data"], snaps["policy"]["data"], snaps["apply"]["data"]
+    idle_overview = _is_idle_overview(st, pol)
+    overview_device = None if idle_overview else _g(st, "device")
     # Module liefern FLACH (media_state: context=Szenario-String; media_policy:
     # volume_target_* flach). Defensiv + 0/False-erhaltend mappen.
     data = {
         "scenario": _first(_g(st, "media_scenario"), _g(st, "scenario"), _g(st, "context")),
         "subcontext": _g(st, "subcontext"),
         "device": _g(st, "device"),
+        "overview_device": overview_device,
         "gaming_source": _g(st, "gaming_source"),
         "gaming_platform": _g(st, "gaming_platform"),
         "audio_owner": _g(pol, "audio_owner"),
@@ -125,6 +143,9 @@ def get_overview(hass: HomeAssistant) -> dict[str, Any]:
         "audio_scenario": _g(pol, "audio_scenario"),
         "audio_scenario_label": _g(pol, "audio_scenario_label"),
         "audio_scenario_detail": _g(pol, "audio_scenario_detail"),
+        "overview_audio_scenario": "off" if idle_overview else _g(pol, "audio_scenario"),
+        "overview_audio_scenario_label": "Aus" if idle_overview else _g(pol, "audio_scenario_label"),
+        "overview_audio_scenario_detail": None if idle_overview else _g(pol, "audio_scenario_detail"),
         "action": _first(_g(pol, "action"), _g(ap, "plan", "homepods_action")),
         "volume_policy": _g(pol, "volume_policy"),
         "apply_enabled": _g(ap, "apply_enabled"),

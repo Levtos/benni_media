@@ -452,6 +452,10 @@ class BenniMediaApp extends HTMLElement {
     const tile = (nm, vl, on) => `<div class="tile ${on ? "on" : "off"}" data-srch="${esc(nm)} ${esc(vl)}"><div class="nm">${esc(nm)}</div><div class="vl">${esc(vl)}</div></div>`;
     // Volume-Formel-Breakdown (media_policy status().volume_formula) → Soll-Karten.
     const vf = (((d.raw || {}).policy || {}).volume_formula) || {};
+    const heroLabel = d.overview_audio_scenario_label || d.audio_scenario_label || d.scenario || "—";
+    const heroDetail = d.overview_audio_scenario_detail || "";
+    const heroDevice = d.overview_device != null ? d.overview_device : d.device;
+    const heroDeviceText = heroDevice ? ` · Gerät ${esc(heroDevice)}` : "";
     const sgn = (v) => (v == null ? "—" : (v > 0 ? "+" : "") + pct(v));
     const sollCard = (title, o, fb) => {
       // Fällt zurück auf den nackten Soll-Wert, falls keine Formel-Daten da sind.
@@ -475,8 +479,8 @@ class BenniMediaApp extends HTMLElement {
     };
     return `
       <div class="card hero"><h2>Aktuelles Szenario</h2>
-        <div class="kpi acc">${esc(d.audio_scenario_label || d.scenario || "—")}${d.audio_scenario_detail ? ` · ${esc(d.audio_scenario_detail)}` : ""}</div>
-        <div class="mut">Kontext: ${esc(d.scenario || "—")} · ${esc(d.subcontext || "—")} · Gerät ${esc(d.device || "—")}${d.gaming_source && d.gaming_source !== "none" ? " · Gaming " + esc(d.gaming_source) : ""}</div>
+        <div class="kpi acc">${esc(heroLabel)}${heroDetail ? ` · ${esc(heroDetail)}` : ""}</div>
+        <div class="mut">Kontext: ${esc(d.scenario || "—")} · ${esc(d.subcontext || "—")}${heroDeviceText}${d.gaming_source && d.gaming_source !== "none" ? " · Gaming " + esc(d.gaming_source) : ""}</div>
         ${d.now_playing && d.now_playing.title ? `<div style="margin-top:8px;color:#9ece6a;font-size:14px;">♪ ${esc(d.now_playing.title)}${d.now_playing.artist ? " — " + esc(d.now_playing.artist) : ""}${d.now_playing.volume != null ? " · " + pct(d.now_playing.volume) : ""} <span class="mut">(${esc(d.now_playing.device)})</span></div>` : ""}
       </div>
       <div class="grid two" style="margin-top:14px;">
