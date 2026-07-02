@@ -123,10 +123,31 @@ def _is_idle_overview(st: Any, pol: Any) -> bool:
     return not bool(_g(vf, "homepods", "plays") or _g(vf, "denon", "plays"))
 
 
+# Overview-„Aus" ist neustart-resistent: ein HA-Core-Neustart lässt die HomePods
+# ~44 s idle gehen (MA nimmt die AirPlay-Gruppe raus/rein, Add-on-Log bestätigt),
+# ohne dass jemand die Musik stoppt. Der Hero soll dabei NICHT auf „Aus" flashen.
+# Reine Display-Glättung (kein Business-Entscheid): „Aus" erst nach anhaltendem
+# Idle ≥ Grace; ein Transient darunter hält das letzte Szenario.
+_OVERVIEW_IDLE_GRACE_S = 60.0
+_OVERVIEW_IDLE_SINCE_KEY = "benni_media_overview_idle_since"
+
+
+def _idle_overview_debounced(hass: HomeAssistant, idle_now: bool) -> bool:
+    since = hass.data.get(_OVERVIEW_IDLE_SINCE_KEY)
+    if not idle_now:
+        hass.data[_OVERVIEW_IDLE_SINCE_KEY] = None
+        return False
+    now = dt_util.utcnow()
+    if since is None:
+        hass.data[_OVERVIEW_IDLE_SINCE_KEY] = now
+        return False
+    return (now - since).total_seconds() >= _OVERVIEW_IDLE_GRACE_S
+
+
 def get_overview(hass: HomeAssistant) -> dict[str, Any]:
     snaps = _all_snaps(hass)
     st, pol, ap = snaps["state"]["data"], snaps["policy"]["data"], snaps["apply"]["data"]
-    idle_overview = _is_idle_overview(st, pol)
+    idle_overview = _idle_overview_debounced(hass, _is_idle_overview(st, pol))
     overview_device = None if idle_overview else _g(st, "device")
     # Module liefern FLACH (media_state: context=Szenario-String; media_policy:
     # volume_target_* flach). Defensiv + 0/False-erhaltend mappen.
