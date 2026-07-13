@@ -5,9 +5,12 @@ import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   root,
   plugins: [react()],
+  define: {
+    "process.env.NODE_ENV": JSON.stringify(mode === "production" ? "production" : "development")
+  },
   build: {
     outDir: resolve(root, "../custom_components/benni_media/frontend/app"),
     emptyOutDir: true,
@@ -24,4 +27,4 @@ export default defineConfig({
     globals: true,
     setupFiles: [resolve(root, "src/test-setup.ts")]
   }
-});
+}));
