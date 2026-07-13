@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AppShell } from "./AppShell";
 import { Card, EmptyState, Icon } from "./components";
 import { useCockpit } from "./useCockpit";
@@ -17,8 +17,7 @@ const pageFromHash = (): PageId => {
 
 export function App({ hass }: { hass: HassLike }) {
   const [page, setPage] = useState<PageId>(pageFromHash()); const { data, setData, loading, error, refresh } = useCockpit(hass);
-  useEffect(() => { const handler = () => setPage(pageFromHash()); window.addEventListener("hashchange", handler); return () => window.removeEventListener("hashchange", handler); }, []);
-  const navigate = (next: PageId) => { window.location.hash = next; setPage(next); };
+  const navigate = (next: PageId) => setPage(next);
   const onMatrix = (matrix: MatrixData) => setData((current) => ({ ...current, matrix }));
   const state = data.state?.data || data.overview?.data?.raw?.state; const policy = data.policy?.data || data.overview?.data?.raw?.policy; const apply = data.apply?.data || data.overview?.data?.raw?.apply;
   let content;
