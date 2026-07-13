@@ -21893,219 +21893,679 @@ var ut = {
 	early_evening: "Früher Abend",
 	late_evening: "Später Abend",
 	early_night: "Frühe Nacht",
-	late_night: "Späte Nacht",
-	homepods: "HomePods",
-	denon: "Denon",
-	private_denon_cap: "Private-Time-Cap",
-	boost_offset: "Track-Boost",
-	grind_homepods_offset: "Grind-Offset",
-	grind_denon_offset: "Grind-Offset",
-	opening_offset_homepods: "Fenster-Offset",
-	opening_offset_denon: "Fenster-Offset",
-	homepods_max: "Maximalpegel",
-	denon_max: "Maximalpegel",
-	ducked_target: "Quiet-Mode-Ziel",
-	active_min: "Aktiv-Mindestpegel"
-};
-function dt({ value: e, overridden: t, onSave: n }) {
-	let [r, i] = (0, y.useState)(String(Math.round(Number(e || 0) * 100)));
-	return /* @__PURE__ */ (0, j.jsxs)("label", {
-		className: `percent-input ${t ? "overridden" : ""}`,
-		children: [/* @__PURE__ */ (0, j.jsx)("input", {
-			type: "number",
-			value: r,
-			min: -100,
-			max: 100,
-			onChange: (e) => i(e.target.value),
-			onBlur: () => n(Number(r) / 100),
-			onKeyDown: (e) => e.key === "Enter" && n(Number(r) / 100)
-		}), /* @__PURE__ */ (0, j.jsx)("span", { children: "%" })]
+	late_night: "Späte Nacht"
+}, dt = {
+	idle: "Inaktiv",
+	free_time: "Freizeit",
+	work_home: "Arbeit zuhause",
+	work_away: "Arbeit außer Haus",
+	household: "Haushalt"
+}, ft = [
+	"idle",
+	"free_time",
+	"work_home",
+	"work_away",
+	"household"
+], pt = ["homepods", "denon"];
+function mt({ text: e }) {
+	return /* @__PURE__ */ (0, j.jsx)("span", {
+		className: "rule-help",
+		title: e,
+		"aria-label": e,
+		children: /* @__PURE__ */ (0, j.jsx)(M.Info, { size: 15 })
 	});
 }
-function ft({ matrix: e, apply: t = {}, hass: n, onMatrix: r }) {
-	let [i, a] = (0, y.useState)("matrix"), [o, s] = (0, y.useState)(!1), c = async (e, t, i, a) => {
-		s(!0);
+function ht({ value: e, offset: t = !1, overridden: n, disabled: r, onSave: i }) {
+	let [a, o] = (0, y.useState)(e == null ? "" : String(Math.round(e * 100)));
+	(0, y.useEffect)(() => {
+		let t = window.setTimeout(() => o(e == null ? "" : String(Math.round(e * 100))), 0);
+		return () => window.clearTimeout(t);
+	}, [e]);
+	let s = () => {
+		!r && i && a !== "" && i(Number(a) / 100);
+	};
+	return /* @__PURE__ */ (0, j.jsxs)("label", {
+		className: `percent-input ${n ? "overridden" : ""} ${r ? "readonly" : ""}`,
+		title: t ? "Offset in Prozentpunkten" : "Lautstärke in Prozent",
+		children: [/* @__PURE__ */ (0, j.jsx)("input", {
+			"aria-label": t ? "Prozentpunkte" : "Prozent",
+			type: "number",
+			value: a,
+			min: -100,
+			max: 100,
+			disabled: r,
+			onChange: (e) => o(e.target.value),
+			onBlur: s,
+			onKeyDown: (e) => e.key === "Enter" && s()
+		}), /* @__PURE__ */ (0, j.jsx)("span", { children: t ? "Pkt." : "%" })]
+	});
+}
+function gt({ value: e, unit: t = "", missing: n }) {
+	return e == null ? /* @__PURE__ */ (0, j.jsx)("span", {
+		className: "contract-missing",
+		title: n || "Dieser Wert fehlt im aktuellen Umbrella-Contract.",
+		children: "Contract fehlt"
+	}) : /* @__PURE__ */ (0, j.jsxs)("strong", {
+		className: "read-value",
+		children: [typeof e == "boolean" ? e ? "Ja" : "Nein" : e, t]
+	});
+}
+function _t({ label: e, supported: t = !0, onReset: n }) {
+	return /* @__PURE__ */ (0, j.jsxs)("button", {
+		className: "button section-reset",
+		disabled: !t,
+		title: t ? `${e} auf Backend-Defaults zurücksetzen` : "Der Backend-Contract kann diesen Abschnitt noch nicht auf gespeicherte Defaults zurücksetzen.",
+		onClick: n,
+		children: [/* @__PURE__ */ (0, j.jsx)(M.RefreshCw, { size: 14 }), " Zurücksetzen"]
+	});
+}
+function vt({ index: e, title: t, sub: n, unit: r, help: i, resetSupported: a = !0, onReset: o }) {
+	return /* @__PURE__ */ (0, j.jsxs)("div", {
+		className: "rule-title",
+		children: [
+			/* @__PURE__ */ (0, j.jsx)("span", { children: e }),
+			/* @__PURE__ */ (0, j.jsxs)("div", { children: [/* @__PURE__ */ (0, j.jsxs)("h2", { children: [
+				t,
+				" ",
+				/* @__PURE__ */ (0, j.jsx)(mt, { text: i })
+			] }), /* @__PURE__ */ (0, j.jsx)("p", { children: n })] }),
+			/* @__PURE__ */ (0, j.jsxs)("div", {
+				className: "rule-title-actions",
+				children: [r && /* @__PURE__ */ (0, j.jsx)(Je, {
+					tone: "violet",
+					children: r
+				}), /* @__PURE__ */ (0, j.jsx)(_t, {
+					label: t,
+					supported: a,
+					onReset: o
+				})]
+			}),
+			/* @__PURE__ */ (0, j.jsxs)("div", {
+				className: "rule-device-head",
+				children: [/* @__PURE__ */ (0, j.jsx)("b", { children: "HomePods" }), /* @__PURE__ */ (0, j.jsx)("b", { children: "Denon" })]
+			})
+		]
+	});
+}
+function yt({ matrix: e, dimension: t, rows: n, labels: r, offset: i, onSave: a }) {
+	return /* @__PURE__ */ (0, j.jsx)("div", {
+		className: "rule-table",
+		children: n.map((n) => /* @__PURE__ */ (0, j.jsxs)("div", {
+			className: "rule-row",
+			children: [/* @__PURE__ */ (0, j.jsx)("span", { children: r[n] || e.catalog.scenario_labels[n] || A(n) }), pt.map((r) => /* @__PURE__ */ (0, j.jsx)(ht, {
+				offset: i,
+				value: e[t]?.[r]?.[n] ?? 0,
+				overridden: e.override?.[t]?.[r]?.[n] !== void 0,
+				onSave: (e) => a(r, n, e)
+			}, r))]
+		}, n))
+	});
+}
+function bt({ matrix: e, apply: t = {}, state: n = {}, hass: r, onMatrix: i }) {
+	let [a, o] = (0, y.useState)("matrix"), [s, c] = (0, y.useState)(!1), l = (0, y.useMemo)(() => e?.catalog.scenarios.filter((e) => ![
+		"gaming",
+		"private",
+		"private_time"
+	].includes(e)) || [], [e]);
+	if (!e) return /* @__PURE__ */ (0, j.jsx)(N, { children: /* @__PURE__ */ (0, j.jsx)(Le, {
+		icon: M.SlidersHorizontal,
+		title: "Regel-Contract nicht verfügbar",
+		text: "benni_media_policy/get_matrix konnte nicht geladen werden. Es wird nichts lokal gespeichert."
+	}) });
+	let u = async (e, t, n, a) => {
+		c(!0);
 		try {
-			r(await nt(n, { [e]: { [t]: { [i]: a } } }));
+			i(await nt(r, { [e]: { [t]: { [n]: a } } }));
 		} finally {
-			s(!1);
+			c(!1);
 		}
-	}, l = async (e, t) => {
-		s(!0);
+	}, d = async (e, t) => {
+		c(!0);
 		try {
-			r(await rt(n, { [e]: t }));
+			i(await rt(r, { [e]: t }));
 		} finally {
-			s(!1);
+			c(!1);
 		}
-	}, u = (0, y.useMemo)(() => e ? [
-		{
-			key: "base",
-			title: "Tagesphasen-Basis",
-			sub: "Grundlautstärke pro Tagesphase",
-			rows: e.catalog.dayphases
-		},
-		{
-			key: "scenario_off",
-			title: "Szenario-Offsets",
-			sub: "Additiver Offset pro Szenario",
-			rows: e.catalog.scenarios
-		},
-		{
-			key: "activity_off",
-			title: "Activity-Offsets",
-			sub: "Additiver Offset pro Aktivität",
-			rows: e.catalog.activities
+	}, f = async (e, t, n) => {
+		if (!window.confirm(`${e} zurücksetzen? Es werden nur die gespeicherten Overrides dieses Abschnitts gelöscht; andere Regeln bleiben unverändert.`)) return;
+		let a = Object.fromEntries(n.map((e) => [e, null]));
+		c(!0);
+		try {
+			i(await nt(r, { [t]: {
+				homepods: a,
+				denon: a
+			} }));
+		} finally {
+			c(!1);
 		}
-	] : [], [e]);
-	return e ? /* @__PURE__ */ (0, j.jsxs)("div", {
-		className: `rules-page ${o ? "busy" : ""}`,
+	}, p = (t) => e.scalars[t], m = n.private_time_active ? n.private_source === "automatic" ? "Automatischer Pfad aktiv" : n.private_source === "manual" ? "Manueller Pfad aktiv" : "Private Time aktiv" : "Kein Pfad aktiv";
+	return /* @__PURE__ */ (0, j.jsxs)("div", {
+		className: `rules-page ${s ? "busy" : ""}`,
 		children: [
 			/* @__PURE__ */ (0, j.jsxs)("div", {
 				className: "rules-tabs",
 				children: [
 					/* @__PURE__ */ (0, j.jsx)(Xe, {
-						active: i === "matrix",
-						onClick: () => a("matrix"),
+						active: a === "matrix",
+						onClick: () => o("matrix"),
 						icon: M.SlidersHorizontal,
 						children: "Matrix"
 					}),
 					/* @__PURE__ */ (0, j.jsx)(Xe, {
-						active: i === "safety",
-						onClick: () => a("safety"),
-						icon: M.ShieldCheck,
-						children: "Caps & Modi"
+						active: a === "gaming",
+						onClick: () => o("gaming"),
+						icon: M.Gamepad2,
+						children: "Gaming-Modi"
 					}),
 					/* @__PURE__ */ (0, j.jsx)(Xe, {
-						active: i === "delays",
-						onClick: () => a("delays"),
+						active: a === "safety",
+						onClick: () => o("safety"),
+						icon: M.ShieldCheck,
+						children: "Caps & Private Time"
+					}),
+					/* @__PURE__ */ (0, j.jsx)(Xe, {
+						active: a === "delays",
+						onClick: () => o("delays"),
 						icon: M.Activity,
-						children: "Delays & Sleep"
+						children: "Delays, Sleep & Waking"
 					}),
 					/* @__PURE__ */ (0, j.jsx)("span", {}),
 					/* @__PURE__ */ (0, j.jsxs)("button", {
 						className: "button danger",
+						title: "Löscht ausschließlich Matrix-Overrides für Basis, Szenario und Activity. Policy-Skalare und Apply-Options bleiben unverändert.",
 						onClick: async () => {
-							window.confirm("Alle Matrix-Overrides auf Defaults zurücksetzen?") && r(await it(n));
+							window.confirm("Globale Matrix zurücksetzen? Betroffen sind ausschließlich Tagesphasen-Basis, Szenario-Offsets und Activity-Offsets. Fenster, Gaming-Skalare, Caps und Apply-Optionen bleiben unverändert.") && i(await it(r));
 						},
-						children: [/* @__PURE__ */ (0, j.jsx)(M.RefreshCw, { size: 17 }), "Matrix zurücksetzen"]
+						children: [/* @__PURE__ */ (0, j.jsx)(M.RefreshCw, { size: 17 }), "Globale Matrix zurücksetzen"]
 					})
 				]
 			}),
-			i === "matrix" && /* @__PURE__ */ (0, j.jsx)(j.Fragment, { children: u.map((t, n) => /* @__PURE__ */ (0, j.jsxs)(N, {
-				className: "rule-section",
-				children: [/* @__PURE__ */ (0, j.jsxs)("div", {
-					className: "rule-title",
-					children: [
-						/* @__PURE__ */ (0, j.jsx)("span", { children: n + 1 }),
-						/* @__PURE__ */ (0, j.jsxs)("div", { children: [/* @__PURE__ */ (0, j.jsx)("h2", { children: t.title }), /* @__PURE__ */ (0, j.jsx)("p", { children: t.sub })] }),
-						/* @__PURE__ */ (0, j.jsxs)("div", {
-							className: "rule-device-head",
-							children: [/* @__PURE__ */ (0, j.jsx)("b", { children: "HomePods" }), /* @__PURE__ */ (0, j.jsx)("b", { children: "Denon" })]
-						})
-					]
-				}), /* @__PURE__ */ (0, j.jsx)("div", {
-					className: "rule-table",
-					children: t.rows.map((n) => /* @__PURE__ */ (0, j.jsxs)("div", {
-						className: "rule-row",
-						children: [/* @__PURE__ */ (0, j.jsx)("span", { children: ut[n] || e.catalog.scenario_labels[n] || A(n) }), ["homepods", "denon"].map((r) => /* @__PURE__ */ (0, j.jsx)(dt, {
-							value: e[t.key]?.[r]?.[n],
-							overridden: e.override?.[t.key]?.[r]?.[n] !== void 0,
-							onSave: (e) => void c(t.key, r, n, e)
-						}, r))]
-					}, n))
-				})]
-			}, t.key)) }),
-			i === "safety" && /* @__PURE__ */ (0, j.jsxs)("div", {
-				className: "scalar-grid",
-				children: [[{
-					title: "HomePods",
-					device: "homepods",
-					keys: [
-						"opening_offset_homepods",
-						"grind_homepods_offset",
-						"homepods_max",
-						"boost_offset",
-						"active_min"
-					]
-				}, {
-					title: "Denon",
-					device: "denon",
-					keys: [
-						"opening_offset_denon",
-						"grind_denon_offset",
-						"denon_max",
-						"private_denon_cap",
-						"active_min"
-					]
-				}].map((t) => /* @__PURE__ */ (0, j.jsx)(N, {
-					title: t.title,
-					action: /* @__PURE__ */ (0, j.jsx)(Je, {
-						tone: t.device === "homepods" ? "pink" : "cyan",
-						children: "getrennt"
-					}),
-					children: /* @__PURE__ */ (0, j.jsx)("div", {
-						className: "scalar-list",
-						children: t.keys.map((t) => /* @__PURE__ */ (0, j.jsxs)("div", { children: [/* @__PURE__ */ (0, j.jsx)("span", { children: ut[t] || A(t) }), /* @__PURE__ */ (0, j.jsx)(dt, {
-							value: e.scalars[t],
-							onSave: (e) => void l(t, e)
-						})] }, t))
-					})
-				}, t.title)), /* @__PURE__ */ (0, j.jsx)(N, {
-					title: "Nicht doppelt konfiguriert",
-					children: /* @__PURE__ */ (0, j.jsxs)("p", {
-						className: "muted-copy",
+			/* @__PURE__ */ (0, j.jsxs)("p", {
+				className: "reset-explainer",
+				children: [/* @__PURE__ */ (0, j.jsx)(M.Info, { size: 14 }), " Der globale Reset löscht nur den Policy-Matrix-Store. Skalare und Apply-Optionen besitzen im aktuellen Contract keinen Reset-Endpunkt."]
+			}),
+			a === "matrix" && /* @__PURE__ */ (0, j.jsxs)(j.Fragment, { children: [
+				/* @__PURE__ */ (0, j.jsxs)(N, {
+					className: "rule-section",
+					children: [/* @__PURE__ */ (0, j.jsx)(vt, {
+						index: 1,
+						title: "Tagesphasen-Basis",
+						sub: "Grundlautstärke je Tagesphase und Gerät",
+						unit: "Prozent",
+						help: "Baselines sind absolute Lautstärken. Intern speichert die Policy 0,0–1,0; hier werden 0–100 % angezeigt.",
+						onReset: () => void f("Tagesphasen-Basis", "base", e.catalog.dayphases)
+					}), /* @__PURE__ */ (0, j.jsx)(yt, {
+						matrix: e,
+						dimension: "base",
+						rows: e.catalog.dayphases,
+						labels: ut,
+						onSave: (e, t, n) => void u("base", e, t, n)
+					})]
+				}),
+				/* @__PURE__ */ (0, j.jsxs)(N, {
+					className: "rule-section",
+					children: [/* @__PURE__ */ (0, j.jsx)(vt, {
+						index: 2,
+						title: "Fenster",
+						sub: "Geschlossen ohne Abzug; gekippt und offen verwenden denselben Wert",
+						unit: "Prozentpunkte",
+						help: "Der Öffnungs-Master unterscheidet geschlossen, gekippt und offen. Die Policy wendet für gekippt und offen bewusst denselben gerätespezifischen Offset an.",
+						resetSupported: !1
+					}), /* @__PURE__ */ (0, j.jsxs)("div", {
+						className: "rule-table",
 						children: [
-							"Alle Änderungen schreiben über ",
-							/* @__PURE__ */ (0, j.jsx)("code", { children: "set_scalars" }),
-							" in dieselben ConfigEntry-Options wie der Backend-Options-Flow. Matrixwerte landen im bestehenden Policy-Store."
+							/* @__PURE__ */ (0, j.jsxs)("div", {
+								className: "rule-row",
+								children: [/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Geschlossen ", /* @__PURE__ */ (0, j.jsx)(Je, {
+									tone: "green",
+									children: "fest 0"
+								})] }), pt.map((e) => /* @__PURE__ */ (0, j.jsx)(ht, {
+									value: 0,
+									offset: !0,
+									disabled: !0
+								}, e))]
+							}),
+							/* @__PURE__ */ (0, j.jsxs)("div", {
+								className: "rule-row",
+								children: [
+									/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Gekippt ", /* @__PURE__ */ (0, j.jsx)(Je, {
+										tone: "orange",
+										children: "additiv"
+									})] }),
+									/* @__PURE__ */ (0, j.jsx)(ht, {
+										value: p("opening_offset_homepods"),
+										offset: !0,
+										onSave: (e) => void d("opening_offset_homepods", e)
+									}),
+									/* @__PURE__ */ (0, j.jsx)(ht, {
+										value: p("opening_offset_denon"),
+										offset: !0,
+										onSave: (e) => void d("opening_offset_denon", e)
+									})
+								]
+							}),
+							/* @__PURE__ */ (0, j.jsxs)("div", {
+								className: "rule-row",
+								children: [
+									/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Offen ", /* @__PURE__ */ (0, j.jsx)(Je, {
+										tone: "violet",
+										children: "wie gekippt"
+									})] }),
+									/* @__PURE__ */ (0, j.jsx)(ht, {
+										value: p("opening_offset_homepods"),
+										offset: !0,
+										disabled: !0
+									}),
+									/* @__PURE__ */ (0, j.jsx)(ht, {
+										value: p("opening_offset_denon"),
+										offset: !0,
+										disabled: !0
+									})
+								]
+							})
+						]
+					})]
+				}),
+				/* @__PURE__ */ (0, j.jsxs)(N, {
+					className: "rule-section",
+					children: [/* @__PURE__ */ (0, j.jsx)(vt, {
+						index: 3,
+						title: "Szenario-Offsets",
+						sub: "Allgemeine additive Offsets; Gaming und Private Time sind separat modelliert",
+						unit: "Prozentpunkte",
+						help: "Private Time ist kein normaler Szenario-Offset. Gaming besitzt eigene Modusregeln und wird deshalb im nächsten Reiter dargestellt.",
+						onReset: () => void f("Szenario-Offsets", "scenario_off", l)
+					}), /* @__PURE__ */ (0, j.jsx)(yt, {
+						matrix: e,
+						dimension: "scenario_off",
+						rows: l,
+						labels: {},
+						offset: !0,
+						onSave: (e, t, n) => void u("scenario_off", e, t, n)
+					})]
+				}),
+				/* @__PURE__ */ (0, j.jsxs)(N, {
+					className: "rule-section",
+					children: [/* @__PURE__ */ (0, j.jsx)(vt, {
+						index: 4,
+						title: "Activity-Offsets",
+						sub: "Vollständiger Activity-Katalog aus dem Lastenheft",
+						unit: "Prozentpunkte",
+						help: "Der Backend-Store akzeptiert offene Activity-Keys. Die UX zeigt deshalb auch idle, free_time und household, obwohl der aktuelle Katalog-Endpunkt nur die beiden Work-Werte listet.",
+						onReset: () => void f("Activity-Offsets", "activity_off", ft)
+					}), /* @__PURE__ */ (0, j.jsx)(yt, {
+						matrix: e,
+						dimension: "activity_off",
+						rows: ft,
+						labels: dt,
+						offset: !0,
+						onSave: (e, t, n) => void u("activity_off", e, t, n)
+					})]
+				})
+			] }),
+			a === "gaming" && /* @__PURE__ */ (0, j.jsxs)("div", {
+				className: "mode-stack",
+				children: [
+					/* @__PURE__ */ (0, j.jsxs)(N, {
+						className: "rule-section",
+						children: [/* @__PURE__ */ (0, j.jsx)(vt, {
+							index: 1,
+							title: "Gaming Normal",
+							sub: "Allgemeiner Gaming-Szenario-Offset je Gerät",
+							unit: "Prozentpunkte",
+							help: "Diese beiden Matrixzellen bilden den Normal-Modus. Sie werden auch als Grundanteil im Grind-Modus berücksichtigt.",
+							onReset: () => void f("Gaming Normal", "scenario_off", ["gaming"])
+						}), /* @__PURE__ */ (0, j.jsx)("div", {
+							className: "rule-table",
+							children: /* @__PURE__ */ (0, j.jsxs)("div", {
+								className: "rule-row",
+								children: [/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Gaming Normal ", /* @__PURE__ */ (0, j.jsx)(Je, {
+									tone: "cyan",
+									children: "Classifier 0"
+								})] }), pt.map((t) => /* @__PURE__ */ (0, j.jsx)(ht, {
+									offset: !0,
+									value: e.scenario_off?.[t]?.gaming ?? 0,
+									overridden: e.override?.scenario_off?.[t]?.gaming !== void 0,
+									onSave: (e) => void u("scenario_off", t, "gaming", e)
+								}, t))]
+							})
+						})]
+					}),
+					/* @__PURE__ */ (0, j.jsxs)(N, {
+						className: "rule-section",
+						children: [/* @__PURE__ */ (0, j.jsx)(vt, {
+							index: 2,
+							title: "Gaming Grind",
+							sub: "Zusätzliche Grind-Offsets; HomePods dominant, Denon als Kulisse",
+							unit: "Prozentpunkte",
+							help: "Berechnung: Gaming-Normal-Offset plus Grind-Offset. Der Subwoofer-Block ist eine feste R16-Regel und kein gewöhnlicher Offset.",
+							resetSupported: !1
+						}), /* @__PURE__ */ (0, j.jsxs)("div", {
+							className: "rule-table",
+							children: [/* @__PURE__ */ (0, j.jsxs)("div", {
+								className: "rule-row",
+								children: [
+									/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Zusätzlicher Grind-Offset ", /* @__PURE__ */ (0, j.jsx)(Je, {
+										tone: "pink",
+										children: "Classifier 1"
+									})] }),
+									/* @__PURE__ */ (0, j.jsx)(ht, {
+										offset: !0,
+										value: p("grind_homepods_offset"),
+										onSave: (e) => void d("grind_homepods_offset", e)
+									}),
+									/* @__PURE__ */ (0, j.jsx)(ht, {
+										offset: !0,
+										value: p("grind_denon_offset"),
+										onSave: (e) => void d("grind_denon_offset", e)
+									})
+								]
+							}), /* @__PURE__ */ (0, j.jsxs)("div", {
+								className: "rule-row hard-rule",
+								children: [/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Subwoofer ", /* @__PURE__ */ (0, j.jsx)(Je, {
+									tone: "orange",
+									children: "Hard-Override"
+								})] }), /* @__PURE__ */ (0, j.jsx)("strong", {
+									className: "span-devices",
+									children: "Immer gesperrt · nicht editierbar"
+								})]
+							})]
+						})]
+					}),
+					/* @__PURE__ */ (0, j.jsxs)(N, {
+						className: "rule-section",
+						children: [/* @__PURE__ */ (0, j.jsx)(vt, {
+							index: 3,
+							title: "Gaming Headset",
+							sub: "Classifier-Modus ohne eigenen Volume-Offset-Contract",
+							help: "Auf dem PC bleibt Raum-Musik erhalten und der Denon aus; bei aktivem Headset ist der Subwoofer gesperrt. Für TV/PS5 fehlt ein dedizierter Ausgabe- und Lautstärke-Contract.",
+							resetSupported: !1
+						}), /* @__PURE__ */ (0, j.jsxs)("div", {
+							className: "fixed-rule-grid",
+							children: [
+								/* @__PURE__ */ (0, j.jsxs)("div", { children: [
+									/* @__PURE__ */ (0, j.jsx)(Je, {
+										tone: "cyan",
+										children: "Classifier 2"
+									}),
+									/* @__PURE__ */ (0, j.jsx)("b", { children: "Headset erkannt" }),
+									/* @__PURE__ */ (0, j.jsx)("span", { children: "Title Classifier liefert `gaming_headset`." })
+								] }),
+								/* @__PURE__ */ (0, j.jsxs)("div", { children: [
+									/* @__PURE__ */ (0, j.jsx)(Je, {
+										tone: "orange",
+										children: "Feste Regel"
+									}),
+									/* @__PURE__ */ (0, j.jsx)("b", { children: "Subwoofer gesperrt" }),
+									/* @__PURE__ */ (0, j.jsx)("span", { children: "Gilt, sobald `headset_active` gesetzt ist." })
+								] }),
+								/* @__PURE__ */ (0, j.jsxs)("div", { children: [
+									/* @__PURE__ */ (0, j.jsx)(Je, {
+										tone: "orange",
+										children: "Contract-Lücke"
+									}),
+									/* @__PURE__ */ (0, j.jsx)("b", { children: "Kein eigener Geräte-Offset" }),
+									/* @__PURE__ */ (0, j.jsx)("span", { children: "Keine scheinbare Headset-Konfiguration im Frontend." })
+								] })
+							]
+						})]
+					})
+				]
+			}),
+			a === "safety" && /* @__PURE__ */ (0, j.jsxs)("div", {
+				className: "safety-grid",
+				children: [
+					/* @__PURE__ */ (0, j.jsxs)(N, {
+						className: "private-card",
+						title: "Private Time",
+						action: /* @__PURE__ */ (0, j.jsx)(_t, {
+							label: "Private Time",
+							supported: !1
+						}),
+						children: [
+							/* @__PURE__ */ (0, j.jsxs)("div", {
+								className: "private-paths",
+								children: [/* @__PURE__ */ (0, j.jsxs)("div", { children: [
+									/* @__PURE__ */ (0, j.jsx)(Je, {
+										tone: "violet",
+										children: "Automatisch"
+									}),
+									/* @__PURE__ */ (0, j.jsx)("b", { children: "Classifier + PC + Denon" }),
+									/* @__PURE__ */ (0, j.jsx)("span", { children: "Alle drei Bedingungen müssen gleichzeitig aktiv sein." })
+								] }), /* @__PURE__ */ (0, j.jsxs)("div", { children: [
+									/* @__PURE__ */ (0, j.jsx)(Je, {
+										tone: "cyan",
+										children: "Manuell"
+									}),
+									/* @__PURE__ */ (0, j.jsx)("b", { children: "Schalter + PC" }),
+									/* @__PURE__ */ (0, j.jsx)("span", { children: "Headset-Pfad ohne Denon und ohne Classifier; schaltet Denon nie ein." })
+								] })]
+							}),
+							/* @__PURE__ */ (0, j.jsxs)("div", {
+								className: "hard-rule-banner",
+								children: [/* @__PURE__ */ (0, j.jsx)(M.LockKeyhole, { size: 18 }), /* @__PURE__ */ (0, j.jsxs)("div", { children: [/* @__PURE__ */ (0, j.jsx)("b", { children: "HomePods bleiben aus" }), /* @__PURE__ */ (0, j.jsx)("span", { children: "Beide Private-Time-Pfade übersteuern die normale Matrix. Private Time startet niemals eine Wake-Sequenz." })] })]
+							}),
+							/* @__PURE__ */ (0, j.jsxs)("div", {
+								className: "private-values",
+								children: [
+									/* @__PURE__ */ (0, j.jsxs)("div", { children: [/* @__PURE__ */ (0, j.jsx)("span", { children: "Denon-Cap" }), /* @__PURE__ */ (0, j.jsx)(ht, {
+										value: p("private_denon_cap"),
+										onSave: (e) => void d("private_denon_cap", e)
+									})] }),
+									/* @__PURE__ */ (0, j.jsxs)("div", { children: [/* @__PURE__ */ (0, j.jsx)("span", { children: "Exit-Delay" }), /* @__PURE__ */ (0, j.jsx)(gt, {
+										value: t.private_exit?.delay_s,
+										unit: " s",
+										missing: "Apply besitzt die Option private_exit_delay_seconds, veröffentlicht den aktuellen Wert aber nicht im Status."
+									})] }),
+									/* @__PURE__ */ (0, j.jsxs)("div", { children: [/* @__PURE__ */ (0, j.jsx)("span", { children: "Aktiver Pfad" }), /* @__PURE__ */ (0, j.jsx)("strong", { children: m })] }),
+									/* @__PURE__ */ (0, j.jsxs)("div", { children: [/* @__PURE__ */ (0, j.jsx)("span", { children: "Diagnose" }), /* @__PURE__ */ (0, j.jsx)("strong", { children: n.private_reason || n.private_blocked_reason || "Kein aktiver oder blockierter Grund" })] })
+								]
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, j.jsxs)(N, {
+						title: "Quiet, Boost & Mute",
+						action: /* @__PURE__ */ (0, j.jsx)(_t, {
+							label: "Quiet, Boost & Mute",
+							supported: !1
+						}),
+						children: [/* @__PURE__ */ (0, j.jsxs)("div", {
+							className: "scalar-list detailed",
+							children: [/* @__PURE__ */ (0, j.jsxs)("div", { children: [/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Quiet / Ducking ", /* @__PURE__ */ (0, j.jsx)("small", { children: "gemeinsamer Contract für beide Geräte" })] }), /* @__PURE__ */ (0, j.jsx)(ht, {
+								value: p("ducked_target"),
+								onSave: (e) => void d("ducked_target", e)
+							})] }), /* @__PURE__ */ (0, j.jsxs)("div", { children: [/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Track Boost ", /* @__PURE__ */ (0, j.jsx)("small", { children: "nur HomePods" })] }), /* @__PURE__ */ (0, j.jsx)(ht, {
+								offset: !0,
+								value: p("boost_offset"),
+								onSave: (e) => void d("boost_offset", e)
+							})] })]
+						}), /* @__PURE__ */ (0, j.jsxs)("div", {
+							className: "rule-notes",
+							children: [
+								/* @__PURE__ */ (0, j.jsxs)("p", { children: [/* @__PURE__ */ (0, j.jsx)(Je, {
+									tone: "orange",
+									children: "Hard-Override"
+								}), " Quiet setzt aktive Ausgaben direkt auf das Ducking-Ziel und übergeht die Matrix."] }),
+								/* @__PURE__ */ (0, j.jsxs)("p", { children: [/* @__PURE__ */ (0, j.jsx)(Je, {
+									tone: "violet",
+									children: "Boost-Block"
+								}), " Blockiert bei Arbeit zuhause, Arbeit außer Haus und Quiet Mode."] }),
+								/* @__PURE__ */ (0, j.jsxs)("p", { children: [/* @__PURE__ */ (0, j.jsx)(Je, {
+									tone: "orange",
+									children: "Hard-Mute"
+								}), " HomePods-Classifier Enum 2 setzt die HomePods unabhängig von der Matrix auf 0."] }),
+								/* @__PURE__ */ (0, j.jsx)("p", {
+									className: "contract-warning",
+									children: "Der Contract hat nur einen gemeinsamen Ducking-Wert. Getrennte HomePods-/Denon-Werte fehlen."
+								})
+							]
+						})]
+					}),
+					/* @__PURE__ */ (0, j.jsxs)(N, {
+						title: "Caps & Grenzen",
+						action: /* @__PURE__ */ (0, j.jsx)(_t, {
+							label: "Caps & Grenzen",
+							supported: !1
+						}),
+						children: [
+							/* @__PURE__ */ (0, j.jsxs)("div", {
+								className: "device-scalar-head",
+								children: [/* @__PURE__ */ (0, j.jsx)("b", { children: "HomePods" }), /* @__PURE__ */ (0, j.jsx)("b", { children: "Denon" })]
+							}),
+							/* @__PURE__ */ (0, j.jsxs)("div", {
+								className: "paired-values",
+								children: [
+									/* @__PURE__ */ (0, j.jsx)("span", { children: "Maximalpegel" }),
+									/* @__PURE__ */ (0, j.jsx)(ht, {
+										value: p("homepods_max"),
+										onSave: (e) => void d("homepods_max", e)
+									}),
+									/* @__PURE__ */ (0, j.jsx)(ht, {
+										value: p("denon_max"),
+										onSave: (e) => void d("denon_max", e)
+									}),
+									/* @__PURE__ */ (0, j.jsx)("span", { children: "Aktiv-Mindestpegel" }),
+									/* @__PURE__ */ (0, j.jsx)(ht, {
+										value: p("active_min"),
+										onSave: (e) => void d("active_min", e)
+									}),
+									/* @__PURE__ */ (0, j.jsx)(ht, {
+										value: p("active_min"),
+										disabled: !0
+									})
+								]
+							}),
+							/* @__PURE__ */ (0, j.jsx)("p", {
+								className: "muted-copy",
+								children: "Der Mindestpegel ist ein gemeinsamer Policy-Wert. Caps greifen nach additiver Matrix und Nudge; Hard-Overrides bleiben dominant."
+							})
 						]
 					})
-				})]
+				]
 			}),
-			i === "delays" && /* @__PURE__ */ (0, j.jsxs)("div", {
-				className: "scalar-grid",
+			a === "delays" && /* @__PURE__ */ (0, j.jsxs)("div", {
+				className: "delay-grid",
 				children: [
 					/* @__PURE__ */ (0, j.jsx)(N, {
-						title: "Apply & Queue",
+						title: "Sleep",
+						action: /* @__PURE__ */ (0, j.jsx)(_t, {
+							label: "Sleep",
+							supported: !1
+						}),
 						children: /* @__PURE__ */ (0, j.jsxs)("div", {
-							className: "key-values",
+							className: "key-values rule-values",
 							children: [
-								/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Debounce", /* @__PURE__ */ (0, j.jsxs)("b", { children: [t.settings?.debounce_seconds ?? "—", " s"] })] }),
-								/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Ramp-Schritte", /* @__PURE__ */ (0, j.jsx)("b", { children: t.settings?.ramp_steps ?? "—" })] }),
-								/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Ramp-Delay", /* @__PURE__ */ (0, j.jsxs)("b", { children: [t.settings?.ramp_step_delay_s ?? "—", " s"] })] }),
-								/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Tiny Delta", /* @__PURE__ */ (0, j.jsx)("b", { children: t.settings?.tiny_delta ?? "—" })] })
+								/* @__PURE__ */ (0, j.jsxs)("span", { children: ["HomePods im Sleep", /* @__PURE__ */ (0, j.jsx)("b", { children: /* @__PURE__ */ (0, j.jsx)(Je, {
+									tone: "orange",
+									children: "Aus · Hard-Override"
+								}) })] }),
+								/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Denon-Sleep-Ziel", /* @__PURE__ */ (0, j.jsx)(gt, { missing: "R25 fordert einen eigenen Denon-Sleep-Zielwert; Policy-Property und Berechnung fehlen." })] }),
+								/* @__PURE__ */ (0, j.jsxs)("span", { children: ["TV automatisch aus", /* @__PURE__ */ (0, j.jsx)(gt, {
+									value: t.sleep_tv?.delay_s,
+									unit: " s"
+								})] }),
+								/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Warn-Vorlauf", /* @__PURE__ */ (0, j.jsx)(gt, {
+									value: t.sleep_tv?.warn_lead_s,
+									unit: " s"
+								})] })
 							]
 						})
 					}),
 					/* @__PURE__ */ (0, j.jsx)(N, {
-						title: "Sleep & Wake",
+						title: "Denon-Nachlauf & Private Exit",
+						action: /* @__PURE__ */ (0, j.jsx)(_t, {
+							label: "Nachlauf & Private Exit",
+							supported: !1
+						}),
 						children: /* @__PURE__ */ (0, j.jsxs)("div", {
-							className: "key-values",
+							className: "key-values rule-values",
 							children: [
-								/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Sleep-TV-Delay", /* @__PURE__ */ (0, j.jsxs)("b", { children: [t.sleep_tv?.delay_s ?? "—", " s"] })] }),
-								/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Warn-Vorlauf", /* @__PURE__ */ (0, j.jsxs)("b", { children: [t.sleep_tv?.warn_lead_s ?? "—", " s"] })] }),
-								/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Wake-Start", /* @__PURE__ */ (0, j.jsxs)("b", { children: [Math.round(Number(t.wake?.start_volume || 0) * 100), " %"] })] }),
-								/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Wake-Debounce", /* @__PURE__ */ (0, j.jsxs)("b", { children: [t.wake?.debounce_s ?? "—", " s"] })] })
+								/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Nachlauf PC", /* @__PURE__ */ (0, j.jsx)(gt, { missing: "Option denon_nachlauf_pc_seconds existiert, wird aber im Apply-Status nicht als konfigurierter Wert veröffentlicht." })] }),
+								/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Nachlauf TV", /* @__PURE__ */ (0, j.jsx)(gt, { missing: "Option denon_nachlauf_tv_seconds existiert, wird aber im Apply-Status nicht als konfigurierter Wert veröffentlicht." })] }),
+								/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Private-Time-Exit", /* @__PURE__ */ (0, j.jsx)(gt, {
+									value: t.private_exit?.delay_s,
+									unit: " s",
+									missing: "Option private_exit_delay_seconds existiert, wird aber im Apply-Status nicht veröffentlicht."
+								})] }),
+								/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Timer aktuell aktiv", /* @__PURE__ */ (0, j.jsx)(gt, { value: !!t.nachlauf?.active })] })
 							]
 						})
+					}),
+					/* @__PURE__ */ (0, j.jsx)(N, {
+						title: "HomePods-Ramp",
+						action: /* @__PURE__ */ (0, j.jsx)(_t, {
+							label: "HomePods-Ramp",
+							supported: !1
+						}),
+						children: /* @__PURE__ */ (0, j.jsxs)("div", {
+							className: "key-values rule-values",
+							children: [
+								/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Ramp-Schritte", /* @__PURE__ */ (0, j.jsx)(gt, { value: t.settings?.ramp_steps })] }),
+								/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Ramp-Intervall", /* @__PURE__ */ (0, j.jsx)(gt, {
+									value: t.settings?.ramp_step_delay_s,
+									unit: " s"
+								})] }),
+								/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Tiny Delta", /* @__PURE__ */ (0, j.jsx)(gt, { value: t.settings?.tiny_delta == null ? null : `${Math.round(Number(t.settings.tiny_delta) * 100)} %` })] }),
+								/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Ramp aktuell", /* @__PURE__ */ (0, j.jsx)(gt, { value: !!t.ramp_active })] })
+							]
+						})
+					}),
+					/* @__PURE__ */ (0, j.jsxs)(N, {
+						className: "waking-card",
+						title: "Waking",
+						action: /* @__PURE__ */ (0, j.jsx)(_t, {
+							label: "Waking",
+							supported: !1
+						}),
+						children: [
+							/* @__PURE__ */ (0, j.jsxs)("div", {
+								className: "waking-formula",
+								children: [
+									/* @__PURE__ */ (0, j.jsx)("span", { children: "Tagesphasen-Basis HomePods" }),
+									/* @__PURE__ */ (0, j.jsx)("b", { children: "+" }),
+									/* @__PURE__ */ (0, j.jsx)("span", {
+										className: "missing-field",
+										children: "Waking-Offset: Contract fehlt"
+									}),
+									/* @__PURE__ */ (0, j.jsx)("b", { children: "=" }),
+									/* @__PURE__ */ (0, j.jsx)("span", { children: "Ergebnis auf 0–100 % begrenzen" })
+								]
+							}),
+							/* @__PURE__ */ (0, j.jsxs)("p", { children: [
+								"Der neue Offset gilt ausschließlich für HomePods bei ",
+								/* @__PURE__ */ (0, j.jsx)("code", { children: "bio_state=waking" }),
+								". Denon bleibt unberührt. Die Startlautstärke der Wake-Rampe ist davon getrennt."
+							] }),
+							/* @__PURE__ */ (0, j.jsxs)("div", {
+								className: "key-values rule-values",
+								children: [
+									/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Benötigte Property", /* @__PURE__ */ (0, j.jsx)("b", { children: /* @__PURE__ */ (0, j.jsx)("code", { children: "waking_homepods_offset" }) })] }),
+									/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Wake-Startlautstärke", /* @__PURE__ */ (0, j.jsx)(gt, { value: t.wake?.start_volume == null ? null : `${Math.round(Number(t.wake.start_volume) * 100)} %` })] }),
+									/* @__PURE__ */ (0, j.jsxs)("span", { children: ["Wake-Debounce", /* @__PURE__ */ (0, j.jsx)(gt, {
+										value: t.wake?.debounce_s,
+										unit: " s"
+									})] })
+								]
+							}),
+							/* @__PURE__ */ (0, j.jsx)("div", {
+								className: "contract-warning",
+								children: "Das Eingabefeld bleibt deaktiviert, bis Policy-Persistenz, `get_matrix.scalars`, `set_scalars` und die Berechnung nach der Tagesphasen-Basis vorhanden sind."
+							})
+						]
 					}),
 					/* @__PURE__ */ (0, j.jsx)(N, { children: /* @__PURE__ */ (0, j.jsx)(Le, {
 						icon: M.LockKeyhole,
-						title: "Nur lesbar",
-						text: "Apply-Delays, Sleep und Wake besitzen aktuell keine persistente Umbrella-Schreib-API. Deshalb zeigt die UX Werte an, speichert sie aber nicht doppelt im Frontend."
+						title: "Apply-Werte nur lesbar",
+						text: "Apply-Delays, Sleep und Wake sind im Options-Flow konfigurierbar, besitzen aber keine persistente Umbrella-Schreib- oder Reset-API. Fehlende Snapshot-Werte werden nicht durch Defaults vorgetäuscht."
 					}) })
 				]
 			})
 		]
-	}) : /* @__PURE__ */ (0, j.jsx)(N, { children: /* @__PURE__ */ (0, j.jsx)(Le, {
-		icon: M.SlidersHorizontal,
-		title: "Regel-Contract nicht verfügbar",
-		text: "benni_media_policy/get_matrix konnte nicht geladen werden. Es wird nichts lokal gespeichert."
-	}) });
+	});
 }
 //#endregion
 //#region frontend-src/src/pages/DiagnosticsPage.tsx
-function pt({ data: e }) {
+function xt({ data: e }) {
 	let [t, n] = (0, y.useState)("state"), r = e.state?.data || {}, i = e.policy?.data || {}, a = e.apply?.data || {}, o = e.diagnostics?.data || {};
 	return /* @__PURE__ */ (0, j.jsxs)("div", {
 		className: "diagnostics-page",
@@ -22130,7 +22590,7 @@ function pt({ data: e }) {
 				children: [
 					/* @__PURE__ */ (0, j.jsx)(N, {
 						title: "Zustandserkennung",
-						children: /* @__PURE__ */ (0, j.jsx)(mt, { data: {
+						children: /* @__PURE__ */ (0, j.jsx)(St, { data: {
 							Szenario: r.context || r.media_scenario,
 							Subkontext: r.subcontext,
 							Gerät: r.device,
@@ -22142,15 +22602,15 @@ function pt({ data: e }) {
 					}),
 					/* @__PURE__ */ (0, j.jsx)(N, {
 						title: "Core-State-Kontext",
-						children: /* @__PURE__ */ (0, j.jsx)(mt, { data: r.context_cards || {} })
+						children: /* @__PURE__ */ (0, j.jsx)(St, { data: r.context_cards || {} })
 					}),
 					/* @__PURE__ */ (0, j.jsx)(N, {
 						title: "Aktive Gründe",
-						children: /* @__PURE__ */ (0, j.jsx)(ht, { values: r.active_reasons || [] })
+						children: /* @__PURE__ */ (0, j.jsx)(Ct, { values: r.active_reasons || [] })
 					}),
 					/* @__PURE__ */ (0, j.jsx)(N, {
 						title: "Classifier",
-						children: /* @__PURE__ */ (0, j.jsx)(mt, { data: Object.fromEntries(Object.entries(r.classifiers || {}).map(([e, t]) => [e, `${t.enum ?? "—"} · ${t.label || "—"}`])) })
+						children: /* @__PURE__ */ (0, j.jsx)(St, { data: Object.fromEntries(Object.entries(r.classifiers || {}).map(([e, t]) => [e, `${t.enum ?? "—"} · ${t.label || "—"}`])) })
 					})
 				]
 			}),
@@ -22159,7 +22619,7 @@ function pt({ data: e }) {
 				children: [
 					/* @__PURE__ */ (0, j.jsx)(N, {
 						title: "Decision Engine",
-						children: /* @__PURE__ */ (0, j.jsx)(mt, { data: {
+						children: /* @__PURE__ */ (0, j.jsx)(St, { data: {
 							"Audio Owner": i.audio_owner,
 							Szenario: i.audio_scenario_label,
 							Detail: i.audio_scenario_detail,
@@ -22182,7 +22642,7 @@ function pt({ data: e }) {
 					}),
 					/* @__PURE__ */ (0, j.jsx)(N, {
 						title: "Nudge / Boost",
-						children: /* @__PURE__ */ (0, j.jsx)(mt, { data: i.nudge || {} })
+						children: /* @__PURE__ */ (0, j.jsx)(St, { data: i.nudge || {} })
 					}),
 					/* @__PURE__ */ (0, j.jsx)(N, {
 						title: "Volume-Formel",
@@ -22195,19 +22655,19 @@ function pt({ data: e }) {
 				children: [
 					/* @__PURE__ */ (0, j.jsx)(N, {
 						title: "Gate",
-						children: /* @__PURE__ */ (0, j.jsx)(mt, { data: a.gates || {} })
+						children: /* @__PURE__ */ (0, j.jsx)(St, { data: a.gates || {} })
 					}),
 					/* @__PURE__ */ (0, j.jsx)(N, {
 						title: "Queue / Debounce",
-						children: /* @__PURE__ */ (0, j.jsx)(mt, { data: a.debounce || {} })
+						children: /* @__PURE__ */ (0, j.jsx)(St, { data: a.debounce || {} })
 					}),
 					/* @__PURE__ */ (0, j.jsx)(N, {
 						title: "Nächster Plan",
-						children: /* @__PURE__ */ (0, j.jsx)(mt, { data: a.plan || {} })
+						children: /* @__PURE__ */ (0, j.jsx)(St, { data: a.plan || {} })
 					}),
 					/* @__PURE__ */ (0, j.jsx)(N, {
 						title: "Nachlauf",
-						children: /* @__PURE__ */ (0, j.jsx)(mt, { data: a.nachlauf || {} })
+						children: /* @__PURE__ */ (0, j.jsx)(St, { data: a.nachlauf || {} })
 					})
 				]
 			}),
@@ -22273,7 +22733,7 @@ function pt({ data: e }) {
 		]
 	});
 }
-function mt({ data: e }) {
+function St({ data: e }) {
 	let t = Object.entries(e).filter(([, e]) => e !== void 0);
 	return t.length ? /* @__PURE__ */ (0, j.jsx)("div", {
 		className: "key-values",
@@ -22284,7 +22744,7 @@ function mt({ data: e }) {
 		text: "Dieser Snapshot-Bereich ist leer."
 	});
 }
-function ht({ values: e }) {
+function Ct({ values: e }) {
 	return e.length ? /* @__PURE__ */ (0, j.jsx)("div", {
 		className: "diag-list",
 		children: e.map((e) => /* @__PURE__ */ (0, j.jsxs)("div", { children: [/* @__PURE__ */ (0, j.jsx)(M.ChevronRight, { size: 16 }), /* @__PURE__ */ (0, j.jsx)("span", { children: e })] }, e))
@@ -22296,7 +22756,7 @@ function ht({ values: e }) {
 }
 //#endregion
 //#region frontend-src/src/App.tsx
-var gt = () => {
+var wt = () => {
 	let e = window.location.hash.replace("#", "");
 	return [
 		"overview",
@@ -22307,10 +22767,10 @@ var gt = () => {
 		"diagnostics"
 	].includes(e) ? e : "overview";
 };
-function _t({ hass: e }) {
-	let [t, n] = (0, y.useState)(gt()), { data: r, setData: i, loading: a, error: o, refresh: s } = at(e);
+function Tt({ hass: e }) {
+	let [t, n] = (0, y.useState)(wt()), { data: r, setData: i, loading: a, error: o, refresh: s } = at(e);
 	(0, y.useEffect)(() => {
-		let e = () => n(gt());
+		let e = () => n(wt());
 		return window.addEventListener("hashchange", e), () => window.removeEventListener("hashchange", e);
 	}, []);
 	let c = (e) => {
@@ -22342,12 +22802,13 @@ function _t({ hass: e }) {
 	}) : t === "tv" ? /* @__PURE__ */ (0, j.jsx)(lt, {
 		state: u,
 		policy: d
-	}) : t === "rules" ? /* @__PURE__ */ (0, j.jsx)(ft, {
+	}) : t === "rules" ? /* @__PURE__ */ (0, j.jsx)(bt, {
 		matrix: r.matrix,
 		apply: f,
+		state: u,
 		hass: e,
 		onMatrix: l
-	}) : /* @__PURE__ */ (0, j.jsx)(pt, { data: r }), /* @__PURE__ */ (0, j.jsx)(Qe, {
+	}) : /* @__PURE__ */ (0, j.jsx)(xt, { data: r }), /* @__PURE__ */ (0, j.jsx)(Qe, {
 		page: t,
 		onPage: c,
 		updatedAt: r.overview?.updated_at,
@@ -22359,7 +22820,7 @@ function _t({ hass: e }) {
 }
 //#endregion
 //#region frontend-src/src/styles.css?inline
-var vt = ":host,#demo{--bg:#0d1018;--bg2:#121722;--panel:#171c29;--panel2:#1d2332;--line:#2b3242;--text:#eef0f8;--muted:#949caf;--violet:#a879ff;--pink:#ff5d9e;--cyan:#5db8ff;--green:#8bd450;--orange:#ffa337;--red:#ff5e6c;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;font-size:14px}*{box-sizing:border-box}button,input{font:inherit}button{color:inherit}code{color:var(--cyan)}.app-shell{background:radial-gradient(circle at 45% -10%,#20263a 0,transparent 35%),var(--bg);grid-template-rows:56px minmax(calc(100vh - 92px),1fr) 36px;grid-template-columns:216px minmax(0,1fr);min-height:100vh;display:grid}.topbar{-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);z-index:20;background:#0c1019e6;border-bottom:1px solid #242a38;grid-column:1/-1;grid-template-columns:216px minmax(500px,1fr) auto;align-items:center;display:grid;position:sticky;top:0}.brand{border-right:1px solid #202632;align-items:center;gap:12px;height:100%;padding:0 20px;font-weight:650;display:flex}.brand-mark{color:#fff;background:linear-gradient(145deg,#287bd7,#5ed0ff);border-radius:7px;place-items:center;width:25px;height:25px;display:grid;box-shadow:0 0 22px #287bd744}.module-nav{justify-content:center;gap:8px;height:100%;display:flex}.module-nav button{color:#b0b6c8;cursor:pointer;background:0 0;border:0;justify-content:center;align-items:center;gap:9px;min-width:105px;height:100%;display:flex;position:relative}.module-nav button.active{color:#c69cff}.module-nav button.active:after{content:\"\";background:var(--violet);height:2px;box-shadow:0 0 14px var(--violet);position:absolute;bottom:0;left:15px;right:15px}.module-nav button:disabled{opacity:.7;cursor:not-allowed}.top-status{border-left:1px solid #242a38;align-items:center;gap:10px;height:65%;padding:0 18px;display:flex}.top-status>svg{color:#a8afc1;margin-right:5px}.top-status div:last-child{flex-direction:column;display:flex}.top-status small{color:var(--muted);font-size:10px}.avatar{color:#20242d;background:linear-gradient(135deg,#f3d0b0,#6f8db5);border:2px solid #d9dbe3;border-radius:50%;place-items:center;width:29px;height:29px;font-weight:800;display:grid}.mobile-menu{background:0 0;border:0;display:none}.sidebar{background:linear-gradient(#101520 0%,#0c1018 100%);border-right:1px solid #202632;flex-direction:column;grid-row:2;padding:20px 12px;display:flex}.sidebar-title{color:#81899a;text-transform:uppercase;letter-spacing:.08em;padding:0 9px 10px;font-size:11px}.sidebar-title button{display:none}.sidebar nav{flex-direction:column;gap:5px;display:flex}.sidebar nav button{text-align:left;color:#b9bfd0;cursor:pointer;background:0 0;border:1px solid #0000;border-radius:8px;align-items:center;gap:12px;padding:12px 11px;display:flex}.sidebar nav button.active{color:#d7c0ff;background:linear-gradient(90deg,#29233e,#24283a);border-color:#312c49}.sidebar nav button:hover{background:#1b2130}.sidebar-health{border:1px solid var(--line);color:var(--muted);text-transform:capitalize;background:#151b27;border-radius:9px;grid-template-columns:1fr 1fr;gap:9px;margin-top:auto;padding:12px;font-size:11px;display:grid}.sidebar-health>span{text-transform:uppercase;letter-spacing:.08em;grid-column:1/-1;font-size:10px}.sidebar-health div{align-items:center;gap:6px;display:flex}.status-dot{background:#667;border-radius:50%;width:8px;height:8px;display:inline-block}.status-dot.good{background:var(--green);box-shadow:0 0 8px #8bd45088}.status-dot.warn{background:var(--orange)}.status-dot.bad{background:var(--red)}main{grid-area:2/2;min-width:0;overflow:hidden}.page-header{background:#12172273;border-bottom:1px solid #272d3a;justify-content:space-between;align-items:center;min-height:96px;padding:18px 26px;display:flex}.page-header h1{margin:0 0 4px;font-size:22px}.page-header p{color:var(--muted);margin:0}.page-meta{color:var(--muted);text-align:right;align-items:center;gap:18px;font-size:11px;display:flex}.page-meta b{color:#b8bfce;font-weight:500}.page-meta button{border:1px solid var(--line);cursor:pointer;background:#1c2230;border-radius:8px;place-items:center;width:39px;height:39px;display:grid}.page-content{max-width:1560px;margin:auto;padding:20px 25px 26px}.section-heading{align-items:center;gap:9px;margin-bottom:10px;display:flex}.section-heading h2{margin:0;font-size:16px}footer{color:#7f879a;background:#0e131d;border-top:1px solid #252b38;grid-column:1/-1;justify-content:space-between;align-items:center;padding:0 20px;font-size:11px;display:flex}footer span{align-items:center;gap:7px;display:flex}.card{border:1px solid var(--line);background:linear-gradient(145deg,#1c2230eb,#121722f0);border-radius:10px;min-width:0;padding:15px;box-shadow:inset 0 1px #ffffff05,0 10px 30px #00000014}.card-head{justify-content:space-between;align-items:center;margin-bottom:13px;display:flex}.card h2{margin:0;font-size:15px}.card h3{margin:18px 0 8px;font-size:13px}.pill{color:#bbc1d0;background:#2a3040;border:1px solid #353d50;border-radius:999px;align-items:center;gap:5px;padding:3px 8px;font-size:10px;display:inline-flex}.pill.green{color:var(--green);background:#1b2a1e;border-color:#2c492d}.pill.pink{color:var(--pink);background:#2b1c27;border-color:#503046}.pill.cyan{color:var(--cyan);background:#182936;border-color:#29475d}.pill.orange{color:var(--orange);background:#2c2519;border-color:#504124}.pill.violet{color:#bd96ff;background:#292139;border-color:#43335e}.empty{text-align:left;color:#697184;justify-content:center;align-items:center;gap:13px;min-height:140px;display:flex}.empty svg{color:#596175}.empty strong{color:#aab1c1;margin-bottom:3px;display:block}.empty p{max-width:360px;margin:0;font-size:12px;line-height:1.5}.empty.compact{justify-content:flex-start;min-height:56px}.empty.compact strong{font-size:12px}.empty.compact p{font-size:11px}.overview-hero{grid-template-columns:minmax(0,2fr) minmax(270px,.95fr);gap:12px;display:grid}.session-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;display:grid}.media-card{border-color:#384153;position:relative;overflow:hidden}.media-card.music.active{background:linear-gradient(145deg,#411c309e,#1a1a27f5);border-color:#9a3d68}.media-card.gaming.active{background:linear-gradient(145deg,#1c2e45bf,#171c28f5);border-color:#3f70a0}.media-card.tv.active{background:linear-gradient(145deg,#18373fb3,#161c28f2);border-color:#3d7989}.media-card-main{gap:15px;display:flex}.artwork{color:#81899b;background:linear-gradient(135deg,#252a3a,#151a25);border:1px solid #343c4e;border-radius:9px;flex-direction:column;flex:none;justify-content:center;align-items:center;gap:7px;width:118px;height:126px;font-size:10px;display:flex;overflow:hidden}.artwork.music{color:#f98abd;background:linear-gradient(135deg,#713151,#261b31)}.artwork.gaming{color:#76bdff;background:linear-gradient(135deg,#244f78,#1d273a)}.artwork.tv{color:#77d4e6;background:linear-gradient(135deg,#235763,#192a34)}.artwork img{object-fit:cover;width:100%;height:100%}.media-copy{min-width:0;padding-top:2px}.eyebrow{color:var(--cyan);align-items:center;gap:7px;font-size:12px;font-weight:650;display:flex}.music .eyebrow{color:var(--pink)}.eyebrow svg{width:17px}.media-copy h3{text-overflow:ellipsis;margin:16px 0 8px;font-size:18px;overflow:hidden}.media-copy p{color:#afb6c8;margin:0 0 12px;font-size:14px}.session-detail{color:var(--green);font-size:12px}.output-row{background:#080c1359;border:1px solid #323949;border-radius:8px;align-items:center;gap:10px;margin-top:13px;padding:10px 12px;display:flex}.output-row>div{flex-direction:column;min-width:0;display:flex}.output-row span{color:#aab1c2;font-size:11px}.output-row strong{color:var(--green);font-size:10px;font-weight:500}.output-row>b{white-space:nowrap;margin-left:auto;font-size:22px}.output-row .button{margin-left:6px;padding:6px 8px}.reason-list{flex-direction:column;gap:9px;display:flex}.reason-item{color:#b9bfce;align-items:flex-start;gap:9px;font-size:12px;line-height:1.35;display:flex}.reason-item svg{color:var(--violet);flex:none}.reason-item.warn svg{color:var(--orange)}.reason.compact{padding:16px}.reason.compact .card-head{margin-bottom:17px}.dashboard-grid{gap:12px;margin-top:12px;display:grid}.dashboard-grid.volumes{grid-template-columns:repeat(2,minmax(0,1fr))}.volume-breakdown.pink{--accent:var(--pink)}.volume-breakdown.cyan{--accent:var(--cyan)}.formula-compact{color:#838b9e;flex-wrap:wrap;align-items:center;gap:7px;margin-bottom:13px;font-size:11px;display:flex}.formula-compact span:not(:first-child):before{content:\" + \";color:#666f82}.formula-compact span.negative:before{content:\" − \";color:var(--orange)}.formula-compact span.positive{color:var(--green)}.formula-compact span.negative{color:var(--orange)}.formula-compact strong{color:var(--accent);margin-left:auto;font-size:20px}.formula-grid{grid-template-columns:repeat(7,minmax(56px,1fr));gap:0;display:grid}.formula-grid div{border-left:1px solid #303747;flex-direction:column;gap:4px;padding:0 9px;display:flex}.formula-grid div:first-child{border:0;padding-left:0}.formula-grid span{color:#81899a;font-size:10px}.formula-grid b{font-size:13px}.volume-meter{background:#2b303f;border-radius:4px;height:4px;margin-top:14px}.volume-meter i{background:var(--accent);height:100%;box-shadow:0 0 9px color-mix(in srgb,var(--accent) 55%,transparent);border-radius:4px;display:block}.dashboard-grid.lower{grid-template-columns:minmax(0,1.6fr) minmax(320px,1fr) minmax(290px,.9fr)}.button-row{flex-wrap:wrap;gap:7px;display:flex}.button{cursor:pointer;color:#c4cad8;background:#222938;border:1px solid #343c4e;border-radius:7px;justify-content:center;align-items:center;gap:7px;padding:9px 11px;font-size:12px;display:inline-flex}.button:hover:not(:disabled),.button.active{color:#d5baff;background:#322942;border-color:#6b5293}.button:disabled{opacity:.48;cursor:not-allowed}.button.danger{color:#ff9a83}.radio-row{flex-wrap:wrap;gap:8px;display:flex}.radio-row>button{color:#ff78ab;cursor:pointer;background:#29202c;border:1px solid #3e3344;border-radius:7px;align-items:center;gap:8px;padding:10px 12px;display:flex}.device-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;display:grid}.device-tile{color:#697184;background:#202633;border:1px solid #293141;border-radius:8px;align-items:center;gap:9px;padding:9px;display:flex}.device-tile.active{color:#aab2c4}.device-tile div{flex-direction:column;min-width:0;display:flex}.device-tile span{white-space:nowrap;text-overflow:ellipsis;font-size:10px;overflow:hidden}.device-tile strong{color:#7a8396;font-size:10px;font-weight:500}.device-tile.active strong{color:var(--green)}.action-log{flex-direction:column;gap:8px;display:flex}.action-log>div{color:#a9b0c1;grid-template-columns:58px 16px 1fr auto;align-items:center;gap:7px;font-size:11px;display:grid}.action-log time{color:#687185}.action-log svg{color:var(--violet)}.decision-strip{border:1px solid var(--line);background:#151a25;border-radius:9px;grid-template-columns:repeat(4,1fr);margin-top:12px;display:grid;overflow:hidden}.decision-strip div{border-left:1px solid var(--line);flex-direction:column;gap:3px;padding:11px 15px;display:flex}.decision-strip div:first-child{border:0}.decision-strip span,.kpi-label{color:#777f91;text-transform:uppercase;letter-spacing:.05em;font-size:10px}.decision-strip strong{color:#bdc3d2;font-size:12px}.music-layout{grid-template-columns:minmax(0,1fr) 310px;gap:12px;display:grid}.music-main,.music-aside{flex-direction:column;gap:12px;display:flex}.now-playing-wide .media-card-main{align-items:center}.now-playing-wide .artwork{width:160px;height:160px}.now-playing-wide .media-copy h3{font-size:25px}.radio-cards{grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;display:grid}.radio-cards button{text-align:left;cursor:pointer;background:#241e2a;border:1px solid #373344;border-radius:8px;grid-template-rows:auto auto;grid-template-columns:46px 1fr auto;align-items:center;gap:2px 10px;padding:9px;display:grid}.radio-cards .radio-art{width:46px;height:46px;color:var(--pink);background:linear-gradient(135deg,#7a2f57,#34203c);border-radius:7px;grid-row:1/3;place-items:center;display:grid}.radio-cards b{font-size:12px}.radio-cards small{color:#7e8799}.radio-cards>button>svg{color:var(--pink);grid-area:1/3/3}.search-box{background:#111621;border:1px solid #343c4d;border-radius:8px;align-items:center;gap:10px;padding:5px 6px 5px 12px;display:flex}.search-box input{color:var(--text);background:0 0;border:0;outline:none;flex:1}.search-box button,.search-results button{color:#d6b6ff;cursor:pointer;background:#312540;border:1px solid #4c3a68;border-radius:6px;padding:8px 12px}.search-results{flex-direction:column;gap:7px;margin-top:10px;display:flex}.search-results>div{background:#1b2130;border-radius:7px;align-items:center;gap:10px;padding:7px;display:flex}.search-results img,.search-results>div>svg{object-fit:cover;border-radius:5px;width:38px;height:38px}.search-results div div{flex-direction:column;flex:1;display:flex}.search-results small{color:var(--muted)}.search-results button{align-items:center;gap:6px;display:flex}.library-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;display:grid}.key-values{flex-direction:column;display:flex}.key-values>span{color:#848c9e;border-top:1px solid #2c3342;justify-content:space-between;gap:15px;padding:9px 0;font-size:11px;display:flex}.key-values>span:first-child{border:0}.key-values b{color:#c1c7d5;text-align:right;overflow-wrap:anywhere;font-weight:550}.gaming-hero,.tv-hero{grid-template-columns:minmax(0,1.65fr) minmax(310px,1fr);gap:12px;display:grid}.gaming-kpis{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:12px;display:grid}.gaming-kpis .card{flex-direction:column;gap:7px;display:flex}.gaming-kpis strong{font-size:16px}.gaming-kpis .pill{align-self:flex-start}.gaming-kpis small{color:var(--muted)}.gaming-bottom,.tv-status{grid-template-columns:repeat(2,minmax(0,1fr))}.classifier-panel{grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:12px;display:grid}.classifier-panel div{background:#1b2130;border-radius:7px;flex-direction:column;gap:5px;padding:10px;display:flex}.classifier-panel svg{color:var(--violet)}.classifier-panel span{color:var(--muted);font-size:10px}.classifier-panel b{font-size:12px}.edit-disabled{width:100%}.tv-page>.volume-breakdown{margin-top:12px}.rules-tabs,.diag-tabs{gap:7px;margin-bottom:12px;display:flex}.rules-tabs>span{flex:1}.rules-page.busy{opacity:.8}.rule-section{margin-bottom:12px;padding:0;overflow:hidden}.rule-title{border-bottom:1px solid var(--line);background:#1b2130;grid-template-columns:36px 1fr 270px;align-items:center;padding:13px 16px;display:grid}.rule-title>span{color:#c9a9ff;background:#33284a;border-radius:50%;place-items:center;width:25px;height:25px;font-size:11px;display:grid}.rule-title h2{margin:0;font-size:14px}.rule-title p{color:var(--muted);margin:3px 0 0;font-size:10px}.rule-device-head{text-align:center;color:#aeb5c5;grid-template-columns:repeat(2,1fr);font-size:11px;display:grid}.rule-device-head b:first-child{color:var(--pink)}.rule-device-head b:last-child{color:var(--cyan)}.rule-row{border-top:1px solid #252c3a;grid-template-columns:minmax(180px,1fr) 135px 135px;align-items:center;min-height:48px;padding:6px 16px;display:grid}.rule-row:first-child{border:0}.rule-row>span{font-size:12px}.percent-input{background:#111620;border:1px solid #353d4e;border-radius:6px;justify-self:center;align-items:center;width:94px;display:flex;overflow:hidden}.percent-input.overridden{box-shadow:inset 2px 0 var(--violet);border-color:#7554a4}.percent-input input{color:#d8dbe4;text-align:right;background:0 0;border:0;outline:none;width:66px;padding:7px}.percent-input span{color:#70798b;padding-right:7px}.scalar-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;display:grid}.scalar-list>div{border-top:1px solid #2d3443;justify-content:space-between;align-items:center;padding:8px 0;display:flex}.scalar-list>div:first-child{border:0}.scalar-list>div>span{font-size:12px}.muted-copy{color:var(--muted);line-height:1.6}.diagnostics-page pre{color:#9ab8da;background:#0d121b;border:1px solid #282f3d;border-radius:7px;margin:0;padding:12px;font-size:11px;line-height:1.5;overflow:auto}.diag-grid,.binding-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;display:grid}.diag-list{flex-direction:column;gap:8px;display:flex}.diag-list>div{color:#aeb5c4;align-items:center;gap:9px;font-size:12px;display:flex}.bindings>div{border-top:1px solid #2b3241;justify-content:space-between;align-items:center;padding:8px 0;display:flex}.bindings>div:first-child{border:0}.bindings span{flex-direction:column;font-size:12px;display:flex}.bindings small{color:#737c90;margin-top:3px;font-size:10px}.raw-json{max-height:65vh}.technical>div{grid-template-columns:70px 16px 1fr auto}.loading{min-height:280px;color:var(--muted);justify-content:center;align-items:center;gap:12px;display:flex}.spin{animation:1s linear infinite spin}@keyframes spin{to{transform:rotate(360deg)}}.scrim{display:none}@media (width<=1180px){.module-nav{gap:0}.module-nav button{min-width:88px}.module-nav button span{font-size:12px}.topbar{grid-template-columns:190px 1fr auto}.app-shell{grid-template-columns:190px minmax(0,1fr)}.brand{padding-left:14px}.sidebar{padding-left:9px;padding-right:9px}.overview-hero,.gaming-hero,.tv-hero{grid-template-columns:1fr}.dashboard-grid.lower{grid-template-columns:1fr 1fr}.quick-control{grid-column:1/-1}.formula-grid{grid-template-columns:repeat(4,1fr);row-gap:12px}.music-layout{grid-template-columns:1fr}.music-aside{grid-template-columns:repeat(2,1fr);display:grid}.gaming-kpis{grid-template-columns:repeat(2,1fr)}}@media (width<=900px){.app-shell{min-height:100vh;padding-top:56px;padding-bottom:36px;display:block}.topbar{height:56px;display:flex;position:fixed;top:0;left:0;right:0}.brand{border:0;flex:1}.module-nav,.top-status{display:none}.mobile-menu{place-items:center;margin-right:12px;display:grid}.sidebar{z-index:50;width:245px;transition:transform .2s;position:fixed;top:56px;bottom:0;left:0;transform:translate(-100%)}.sidebar.open{transform:translate(0)}.sidebar-title{justify-content:space-between;align-items:center;display:flex}.sidebar-title button{background:0 0;border:0;display:grid}.scrim{z-index:40;background:#03050aaa;border:0;display:block;position:fixed;inset:56px 0 0}main{display:block}.page-header{padding:15px 18px}.page-content{padding:16px}.page-meta>span{display:none}footer{z-index:20;height:36px;position:fixed;bottom:0;left:0;right:0}footer span:first-child,footer span:last-child{display:none}.session-grid,.dashboard-grid.volumes,.dashboard-grid.lower,.gaming-bottom,.tv-status,.library-grid,.scalar-grid,.diag-grid,.binding-grid,.music-aside{grid-template-columns:1fr}.radio-cards,.device-grid,.decision-strip{grid-template-columns:repeat(2,1fr)}.gaming-kpis{grid-template-columns:1fr 1fr}.classifier-panel{grid-template-columns:1fr}.rule-title{grid-template-columns:35px 1fr}.rule-device-head{display:none}.rule-row{grid-template-columns:minmax(150px,1fr) 100px 100px;padding:6px 10px}.rules-tabs,.diag-tabs{overflow:auto}.rules-tabs .button,.diag-tabs .button{white-space:nowrap}}@media (width<=600px){.session-grid,.gaming-kpis{grid-template-columns:1fr}.media-card-main{align-items:center}.artwork{width:94px;height:104px}.media-copy h3{margin-top:10px;font-size:16px}.formula-grid{grid-template-columns:repeat(2,1fr)}.radio-cards,.decision-strip{grid-template-columns:1fr}.decision-strip div{border-left:0;border-top:1px solid var(--line)}.page-header h1{font-size:19px}.rule-row{grid-template-columns:1fr 82px 82px}.percent-input{width:75px}.percent-input input{width:52px}.now-playing-wide .artwork{width:110px;height:110px}.now-playing-wide .media-copy h3{font-size:19px}}", yt = class extends HTMLElement {
+var Et = ":host,#demo{--bg:#0d1018;--bg2:#121722;--panel:#171c29;--panel2:#1d2332;--line:#2b3242;--text:#eef0f8;--muted:#949caf;--violet:#a879ff;--pink:#ff5d9e;--cyan:#5db8ff;--green:#8bd450;--orange:#ffa337;--red:#ff5e6c;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;font-size:14px}*{box-sizing:border-box}button,input{font:inherit}button{color:inherit}code{color:var(--cyan)}.app-shell{background:radial-gradient(circle at 45% -10%,#20263a 0,transparent 35%),var(--bg);grid-template-rows:56px minmax(calc(100vh - 92px),1fr) 36px;grid-template-columns:216px minmax(0,1fr);min-height:100vh;display:grid}.topbar{-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);z-index:20;background:#0c1019e6;border-bottom:1px solid #242a38;grid-column:1/-1;grid-template-columns:216px minmax(500px,1fr) auto;align-items:center;display:grid;position:sticky;top:0}.brand{border-right:1px solid #202632;align-items:center;gap:12px;height:100%;padding:0 20px;font-weight:650;display:flex}.brand-mark{color:#fff;background:linear-gradient(145deg,#287bd7,#5ed0ff);border-radius:7px;place-items:center;width:25px;height:25px;display:grid;box-shadow:0 0 22px #287bd744}.module-nav{justify-content:center;gap:8px;height:100%;display:flex}.module-nav button{color:#b0b6c8;cursor:pointer;background:0 0;border:0;justify-content:center;align-items:center;gap:9px;min-width:105px;height:100%;display:flex;position:relative}.module-nav button.active{color:#c69cff}.module-nav button.active:after{content:\"\";background:var(--violet);height:2px;box-shadow:0 0 14px var(--violet);position:absolute;bottom:0;left:15px;right:15px}.module-nav button:disabled{opacity:.7;cursor:not-allowed}.top-status{border-left:1px solid #242a38;align-items:center;gap:10px;height:65%;padding:0 18px;display:flex}.top-status>svg{color:#a8afc1;margin-right:5px}.top-status div:last-child{flex-direction:column;display:flex}.top-status small{color:var(--muted);font-size:10px}.avatar{color:#20242d;background:linear-gradient(135deg,#f3d0b0,#6f8db5);border:2px solid #d9dbe3;border-radius:50%;place-items:center;width:29px;height:29px;font-weight:800;display:grid}.mobile-menu{background:0 0;border:0;display:none}.sidebar{background:linear-gradient(#101520 0%,#0c1018 100%);border-right:1px solid #202632;flex-direction:column;grid-row:2;padding:20px 12px;display:flex}.sidebar-title{color:#81899a;text-transform:uppercase;letter-spacing:.08em;padding:0 9px 10px;font-size:11px}.sidebar-title button{display:none}.sidebar nav{flex-direction:column;gap:5px;display:flex}.sidebar nav button{text-align:left;color:#b9bfd0;cursor:pointer;background:0 0;border:1px solid #0000;border-radius:8px;align-items:center;gap:12px;padding:12px 11px;display:flex}.sidebar nav button.active{color:#d7c0ff;background:linear-gradient(90deg,#29233e,#24283a);border-color:#312c49}.sidebar nav button:hover{background:#1b2130}.sidebar-health{border:1px solid var(--line);color:var(--muted);text-transform:capitalize;background:#151b27;border-radius:9px;grid-template-columns:1fr 1fr;gap:9px;margin-top:auto;padding:12px;font-size:11px;display:grid}.sidebar-health>span{text-transform:uppercase;letter-spacing:.08em;grid-column:1/-1;font-size:10px}.sidebar-health div{align-items:center;gap:6px;display:flex}.status-dot{background:#667;border-radius:50%;width:8px;height:8px;display:inline-block}.status-dot.good{background:var(--green);box-shadow:0 0 8px #8bd45088}.status-dot.warn{background:var(--orange)}.status-dot.bad{background:var(--red)}main{grid-area:2/2;min-width:0;overflow:hidden}.page-header{background:#12172273;border-bottom:1px solid #272d3a;justify-content:space-between;align-items:center;min-height:96px;padding:18px 26px;display:flex}.page-header h1{margin:0 0 4px;font-size:22px}.page-header p{color:var(--muted);margin:0}.page-meta{color:var(--muted);text-align:right;align-items:center;gap:18px;font-size:11px;display:flex}.page-meta b{color:#b8bfce;font-weight:500}.page-meta button{border:1px solid var(--line);cursor:pointer;background:#1c2230;border-radius:8px;place-items:center;width:39px;height:39px;display:grid}.page-content{max-width:1560px;margin:auto;padding:20px 25px 26px}.section-heading{align-items:center;gap:9px;margin-bottom:10px;display:flex}.section-heading h2{margin:0;font-size:16px}footer{color:#7f879a;background:#0e131d;border-top:1px solid #252b38;grid-column:1/-1;justify-content:space-between;align-items:center;padding:0 20px;font-size:11px;display:flex}footer span{align-items:center;gap:7px;display:flex}.card{border:1px solid var(--line);background:linear-gradient(145deg,#1c2230eb,#121722f0);border-radius:10px;min-width:0;padding:15px;box-shadow:inset 0 1px #ffffff05,0 10px 30px #00000014}.card-head{justify-content:space-between;align-items:center;margin-bottom:13px;display:flex}.card h2{margin:0;font-size:15px}.card h3{margin:18px 0 8px;font-size:13px}.pill{color:#bbc1d0;background:#2a3040;border:1px solid #353d50;border-radius:999px;align-items:center;gap:5px;padding:3px 8px;font-size:10px;display:inline-flex}.pill.green{color:var(--green);background:#1b2a1e;border-color:#2c492d}.pill.pink{color:var(--pink);background:#2b1c27;border-color:#503046}.pill.cyan{color:var(--cyan);background:#182936;border-color:#29475d}.pill.orange{color:var(--orange);background:#2c2519;border-color:#504124}.pill.violet{color:#bd96ff;background:#292139;border-color:#43335e}.empty{text-align:left;color:#697184;justify-content:center;align-items:center;gap:13px;min-height:140px;display:flex}.empty svg{color:#596175}.empty strong{color:#aab1c1;margin-bottom:3px;display:block}.empty p{max-width:360px;margin:0;font-size:12px;line-height:1.5}.empty.compact{justify-content:flex-start;min-height:56px}.empty.compact strong{font-size:12px}.empty.compact p{font-size:11px}.overview-hero{grid-template-columns:minmax(0,2fr) minmax(270px,.95fr);gap:12px;display:grid}.session-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;display:grid}.media-card{border-color:#384153;position:relative;overflow:hidden}.media-card.music.active{background:linear-gradient(145deg,#411c309e,#1a1a27f5);border-color:#9a3d68}.media-card.gaming.active{background:linear-gradient(145deg,#1c2e45bf,#171c28f5);border-color:#3f70a0}.media-card.tv.active{background:linear-gradient(145deg,#18373fb3,#161c28f2);border-color:#3d7989}.media-card-main{gap:15px;display:flex}.artwork{color:#81899b;background:linear-gradient(135deg,#252a3a,#151a25);border:1px solid #343c4e;border-radius:9px;flex-direction:column;flex:none;justify-content:center;align-items:center;gap:7px;width:118px;height:126px;font-size:10px;display:flex;overflow:hidden}.artwork.music{color:#f98abd;background:linear-gradient(135deg,#713151,#261b31)}.artwork.gaming{color:#76bdff;background:linear-gradient(135deg,#244f78,#1d273a)}.artwork.tv{color:#77d4e6;background:linear-gradient(135deg,#235763,#192a34)}.artwork img{object-fit:cover;width:100%;height:100%}.media-copy{min-width:0;padding-top:2px}.eyebrow{color:var(--cyan);align-items:center;gap:7px;font-size:12px;font-weight:650;display:flex}.music .eyebrow{color:var(--pink)}.eyebrow svg{width:17px}.media-copy h3{text-overflow:ellipsis;margin:16px 0 8px;font-size:18px;overflow:hidden}.media-copy p{color:#afb6c8;margin:0 0 12px;font-size:14px}.session-detail{color:var(--green);font-size:12px}.output-row{background:#080c1359;border:1px solid #323949;border-radius:8px;align-items:center;gap:10px;margin-top:13px;padding:10px 12px;display:flex}.output-row>div{flex-direction:column;min-width:0;display:flex}.output-row span{color:#aab1c2;font-size:11px}.output-row strong{color:var(--green);font-size:10px;font-weight:500}.output-row>b{white-space:nowrap;margin-left:auto;font-size:22px}.output-row .button{margin-left:6px;padding:6px 8px}.reason-list{flex-direction:column;gap:9px;display:flex}.reason-item{color:#b9bfce;align-items:flex-start;gap:9px;font-size:12px;line-height:1.35;display:flex}.reason-item svg{color:var(--violet);flex:none}.reason-item.warn svg{color:var(--orange)}.reason.compact{padding:16px}.reason.compact .card-head{margin-bottom:17px}.dashboard-grid{gap:12px;margin-top:12px;display:grid}.dashboard-grid.volumes{grid-template-columns:repeat(2,minmax(0,1fr))}.volume-breakdown.pink{--accent:var(--pink)}.volume-breakdown.cyan{--accent:var(--cyan)}.formula-compact{color:#838b9e;flex-wrap:wrap;align-items:center;gap:7px;margin-bottom:13px;font-size:11px;display:flex}.formula-compact span:not(:first-child):before{content:\" + \";color:#666f82}.formula-compact span.negative:before{content:\" − \";color:var(--orange)}.formula-compact span.positive{color:var(--green)}.formula-compact span.negative{color:var(--orange)}.formula-compact strong{color:var(--accent);margin-left:auto;font-size:20px}.formula-grid{grid-template-columns:repeat(7,minmax(56px,1fr));gap:0;display:grid}.formula-grid div{border-left:1px solid #303747;flex-direction:column;gap:4px;padding:0 9px;display:flex}.formula-grid div:first-child{border:0;padding-left:0}.formula-grid span{color:#81899a;font-size:10px}.formula-grid b{font-size:13px}.volume-meter{background:#2b303f;border-radius:4px;height:4px;margin-top:14px}.volume-meter i{background:var(--accent);height:100%;box-shadow:0 0 9px color-mix(in srgb,var(--accent) 55%,transparent);border-radius:4px;display:block}.dashboard-grid.lower{grid-template-columns:minmax(0,1.6fr) minmax(320px,1fr) minmax(290px,.9fr)}.button-row{flex-wrap:wrap;gap:7px;display:flex}.button{cursor:pointer;color:#c4cad8;background:#222938;border:1px solid #343c4e;border-radius:7px;justify-content:center;align-items:center;gap:7px;padding:9px 11px;font-size:12px;display:inline-flex}.button:hover:not(:disabled),.button.active{color:#d5baff;background:#322942;border-color:#6b5293}.button:disabled{opacity:.48;cursor:not-allowed}.button.danger{color:#ff9a83}.radio-row{flex-wrap:wrap;gap:8px;display:flex}.radio-row>button{color:#ff78ab;cursor:pointer;background:#29202c;border:1px solid #3e3344;border-radius:7px;align-items:center;gap:8px;padding:10px 12px;display:flex}.device-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;display:grid}.device-tile{color:#697184;background:#202633;border:1px solid #293141;border-radius:8px;align-items:center;gap:9px;padding:9px;display:flex}.device-tile.active{color:#aab2c4}.device-tile div{flex-direction:column;min-width:0;display:flex}.device-tile span{white-space:nowrap;text-overflow:ellipsis;font-size:10px;overflow:hidden}.device-tile strong{color:#7a8396;font-size:10px;font-weight:500}.device-tile.active strong{color:var(--green)}.action-log{flex-direction:column;gap:8px;display:flex}.action-log>div{color:#a9b0c1;grid-template-columns:58px 16px 1fr auto;align-items:center;gap:7px;font-size:11px;display:grid}.action-log time{color:#687185}.action-log svg{color:var(--violet)}.decision-strip{border:1px solid var(--line);background:#151a25;border-radius:9px;grid-template-columns:repeat(4,1fr);margin-top:12px;display:grid;overflow:hidden}.decision-strip div{border-left:1px solid var(--line);flex-direction:column;gap:3px;padding:11px 15px;display:flex}.decision-strip div:first-child{border:0}.decision-strip span,.kpi-label{color:#777f91;text-transform:uppercase;letter-spacing:.05em;font-size:10px}.decision-strip strong{color:#bdc3d2;font-size:12px}.music-layout{grid-template-columns:minmax(0,1fr) 310px;gap:12px;display:grid}.music-main,.music-aside{flex-direction:column;gap:12px;display:flex}.now-playing-wide .media-card-main{align-items:center}.now-playing-wide .artwork{width:160px;height:160px}.now-playing-wide .media-copy h3{font-size:25px}.radio-cards{grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;display:grid}.radio-cards button{text-align:left;cursor:pointer;background:#241e2a;border:1px solid #373344;border-radius:8px;grid-template-rows:auto auto;grid-template-columns:46px 1fr auto;align-items:center;gap:2px 10px;padding:9px;display:grid}.radio-cards .radio-art{width:46px;height:46px;color:var(--pink);background:linear-gradient(135deg,#7a2f57,#34203c);border-radius:7px;grid-row:1/3;place-items:center;display:grid}.radio-cards b{font-size:12px}.radio-cards small{color:#7e8799}.radio-cards>button>svg{color:var(--pink);grid-area:1/3/3}.search-box{background:#111621;border:1px solid #343c4d;border-radius:8px;align-items:center;gap:10px;padding:5px 6px 5px 12px;display:flex}.search-box input{color:var(--text);background:0 0;border:0;outline:none;flex:1}.search-box button,.search-results button{color:#d6b6ff;cursor:pointer;background:#312540;border:1px solid #4c3a68;border-radius:6px;padding:8px 12px}.search-results{flex-direction:column;gap:7px;margin-top:10px;display:flex}.search-results>div{background:#1b2130;border-radius:7px;align-items:center;gap:10px;padding:7px;display:flex}.search-results img,.search-results>div>svg{object-fit:cover;border-radius:5px;width:38px;height:38px}.search-results div div{flex-direction:column;flex:1;display:flex}.search-results small{color:var(--muted)}.search-results button{align-items:center;gap:6px;display:flex}.library-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;display:grid}.key-values{flex-direction:column;display:flex}.key-values>span{color:#848c9e;border-top:1px solid #2c3342;justify-content:space-between;gap:15px;padding:9px 0;font-size:11px;display:flex}.key-values>span:first-child{border:0}.key-values b{color:#c1c7d5;text-align:right;overflow-wrap:anywhere;font-weight:550}.gaming-hero,.tv-hero{grid-template-columns:minmax(0,1.65fr) minmax(310px,1fr);gap:12px;display:grid}.gaming-kpis{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:12px;display:grid}.gaming-kpis .card{flex-direction:column;gap:7px;display:flex}.gaming-kpis strong{font-size:16px}.gaming-kpis .pill{align-self:flex-start}.gaming-kpis small{color:var(--muted)}.gaming-bottom,.tv-status{grid-template-columns:repeat(2,minmax(0,1fr))}.classifier-panel{grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:12px;display:grid}.classifier-panel div{background:#1b2130;border-radius:7px;flex-direction:column;gap:5px;padding:10px;display:flex}.classifier-panel svg{color:var(--violet)}.classifier-panel span{color:var(--muted);font-size:10px}.classifier-panel b{font-size:12px}.edit-disabled{width:100%}.tv-page>.volume-breakdown{margin-top:12px}.rules-tabs,.diag-tabs{gap:7px;margin-bottom:12px;display:flex}.rules-tabs>span{flex:1}.rules-page.busy{opacity:.8}.rule-section{margin-bottom:12px;padding:0;overflow:hidden}.rule-title{border-bottom:1px solid var(--line);background:#1b2130;grid-template-columns:36px 1fr 270px;align-items:center;padding:13px 16px;display:grid}.rule-title>span{color:#c9a9ff;background:#33284a;border-radius:50%;place-items:center;width:25px;height:25px;font-size:11px;display:grid}.rule-title h2{margin:0;font-size:14px}.rule-title p{color:var(--muted);margin:3px 0 0;font-size:10px}.rule-device-head{text-align:center;color:#aeb5c5;grid-template-columns:repeat(2,1fr);font-size:11px;display:grid}.rule-device-head b:first-child{color:var(--pink)}.rule-device-head b:last-child{color:var(--cyan)}.rule-row{border-top:1px solid #252c3a;grid-template-columns:minmax(180px,1fr) 135px 135px;align-items:center;min-height:48px;padding:6px 16px;display:grid}.rule-row:first-child{border:0}.rule-row>span{font-size:12px}.percent-input{background:#111620;border:1px solid #353d4e;border-radius:6px;justify-self:center;align-items:center;width:94px;display:flex;overflow:hidden}.percent-input.overridden{box-shadow:inset 2px 0 var(--violet);border-color:#7554a4}.percent-input input{color:#d8dbe4;text-align:right;background:0 0;border:0;outline:none;width:66px;padding:7px}.percent-input span{color:#70798b;padding-right:7px}.scalar-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;display:grid}.scalar-list>div{border-top:1px solid #2d3443;justify-content:space-between;align-items:center;padding:8px 0;display:flex}.scalar-list>div:first-child{border:0}.scalar-list>div>span{font-size:12px}.muted-copy{color:var(--muted);line-height:1.6}.reset-explainer{color:#858da0;align-items:center;gap:7px;margin:-3px 0 12px;font-size:11px;display:flex}.rule-title{grid-template-columns:36px minmax(260px,1fr) auto}.rule-title-actions{justify-content:flex-end;align-items:center;gap:8px;display:flex}.rule-device-head{grid-column:3;min-width:270px;margin-top:8px}.rule-help{vertical-align:middle;color:#798397;cursor:help;display:inline-flex}.section-reset{padding:6px 8px;font-size:10px}.percent-input.readonly{opacity:.65}.percent-input input:disabled{cursor:not-allowed}.rule-row>span{align-items:center;gap:7px;display:flex}.span-devices{text-align:center;color:var(--orange);grid-column:2/4}.hard-rule{background:#261f19}.mode-stack{flex-direction:column;gap:12px;display:flex}.fixed-rule-grid,.private-paths{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;padding:15px;display:grid}.fixed-rule-grid>div,.private-paths>div{background:#171d29;border:1px solid #303849;border-radius:8px;flex-direction:column;gap:6px;padding:12px;display:flex}.fixed-rule-grid span,.private-paths span{color:var(--muted);font-size:11px;line-height:1.45}.fixed-rule-grid .pill,.private-paths .pill{align-self:flex-start}.safety-grid,.delay-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;display:grid}.private-card{grid-column:1/-1}.private-paths{grid-template-columns:repeat(2,1fr);margin-bottom:12px;padding:0}.hard-rule-banner{color:var(--orange);background:#2b2118;border:1px solid #60452b;border-radius:8px;align-items:center;gap:10px;padding:12px;display:flex}.hard-rule-banner div{flex-direction:column;gap:3px;display:flex}.hard-rule-banner span{color:#baa98f;font-size:11px}.private-values{grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;display:grid}.private-values>div{background:#171d29;border-radius:7px;flex-direction:column;gap:7px;padding:10px;display:flex}.private-values span,.device-scalar-head{color:var(--muted);font-size:10px}.private-values strong{font-size:12px}.scalar-list.detailed small{color:var(--muted);margin-top:3px;display:block}.rule-notes{border-top:1px solid var(--line);margin-top:12px;padding-top:8px}.rule-notes p{color:#aeb5c5;align-items:center;gap:7px;font-size:11px;display:flex}.contract-warning{background:#2b2418;border:1px solid #634b25;border-radius:7px;padding:9px;font-size:11px;line-height:1.5;color:#e8ad53!important}.device-scalar-head{text-align:center;grid-template-columns:1fr 1fr;margin-left:35%;display:grid}.device-scalar-head b:first-child{color:var(--pink)}.device-scalar-head b:last-child{color:var(--cyan)}.paired-values{grid-template-columns:minmax(130px,1fr) 105px 105px;align-items:center;gap:8px;display:grid}.paired-values>span{font-size:11px}.contract-missing{color:var(--orange);cursor:help;background:#30271b;border-radius:6px;padding:4px 7px;font-size:10px;display:inline-flex}.read-value{color:#c8cedb;font-size:12px}.rule-values>span{align-items:center}.rule-values>span>b,.rule-values>span>.read-value,.rule-values>span>.contract-missing{margin-left:auto}.waking-card{grid-column:1/-1}.waking-formula{text-align:center;background:#151b27;border:1px solid #31394a;border-radius:8px;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:10px;padding:12px;display:grid}.waking-formula b{color:var(--violet)}.waking-formula span{background:#1e2533;border-radius:6px;padding:9px}.waking-formula .missing-field{color:var(--orange);background:#282117;border:1px dashed #765529}.waking-card>p{color:var(--muted);font-size:12px;line-height:1.55}.delay-grid>.card:last-child{grid-column:1/-1}.diagnostics-page pre{color:#9ab8da;background:#0d121b;border:1px solid #282f3d;border-radius:7px;margin:0;padding:12px;font-size:11px;line-height:1.5;overflow:auto}.diag-grid,.binding-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;display:grid}.diag-list{flex-direction:column;gap:8px;display:flex}.diag-list>div{color:#aeb5c4;align-items:center;gap:9px;font-size:12px;display:flex}.bindings>div{border-top:1px solid #2b3241;justify-content:space-between;align-items:center;padding:8px 0;display:flex}.bindings>div:first-child{border:0}.bindings span{flex-direction:column;font-size:12px;display:flex}.bindings small{color:#737c90;margin-top:3px;font-size:10px}.raw-json{max-height:65vh}.technical>div{grid-template-columns:70px 16px 1fr auto}.loading{min-height:280px;color:var(--muted);justify-content:center;align-items:center;gap:12px;display:flex}.spin{animation:1s linear infinite spin}@keyframes spin{to{transform:rotate(360deg)}}.scrim{display:none}@media (width<=1180px){.module-nav{gap:0}.module-nav button{min-width:88px}.module-nav button span{font-size:12px}.topbar{grid-template-columns:190px 1fr auto}.app-shell{grid-template-columns:190px minmax(0,1fr)}.brand{padding-left:14px}.sidebar{padding-left:9px;padding-right:9px}.overview-hero,.gaming-hero,.tv-hero{grid-template-columns:1fr}.dashboard-grid.lower{grid-template-columns:1fr 1fr}.quick-control{grid-column:1/-1}.formula-grid{grid-template-columns:repeat(4,1fr);row-gap:12px}.music-layout{grid-template-columns:1fr}.music-aside{grid-template-columns:repeat(2,1fr);display:grid}.gaming-kpis{grid-template-columns:repeat(2,1fr)}}@media (width<=900px){.app-shell{min-height:100vh;padding-top:56px;padding-bottom:36px;display:block}.topbar{height:56px;display:flex;position:fixed;top:0;left:0;right:0}.brand{border:0;flex:1}.module-nav,.top-status{display:none}.mobile-menu{place-items:center;margin-right:12px;display:grid}.sidebar{z-index:50;width:245px;transition:transform .2s;position:fixed;top:56px;bottom:0;left:0;transform:translate(-100%)}.sidebar.open{transform:translate(0)}.sidebar-title{justify-content:space-between;align-items:center;display:flex}.sidebar-title button{background:0 0;border:0;display:grid}.scrim{z-index:40;background:#03050aaa;border:0;display:block;position:fixed;inset:56px 0 0}main{display:block}.page-header{padding:15px 18px}.page-content{padding:16px}.page-meta>span{display:none}footer{z-index:20;height:36px;position:fixed;bottom:0;left:0;right:0}footer span:first-child,footer span:last-child{display:none}.session-grid,.dashboard-grid.volumes,.dashboard-grid.lower,.gaming-bottom,.tv-status,.library-grid,.scalar-grid,.diag-grid,.binding-grid,.music-aside{grid-template-columns:1fr}.radio-cards,.device-grid,.decision-strip{grid-template-columns:repeat(2,1fr)}.gaming-kpis{grid-template-columns:1fr 1fr}.classifier-panel{grid-template-columns:1fr}.rule-title{grid-template-columns:35px 1fr}.rule-device-head{display:none}.rule-row{grid-template-columns:minmax(150px,1fr) 100px 100px;padding:6px 10px}.rules-tabs,.diag-tabs{overflow:auto}.rules-tabs .button,.diag-tabs .button{white-space:nowrap}}@media (width<=600px){.session-grid,.gaming-kpis{grid-template-columns:1fr}.media-card-main{align-items:center}.artwork{width:94px;height:104px}.media-copy h3{margin-top:10px;font-size:16px}.formula-grid{grid-template-columns:repeat(2,1fr)}.radio-cards,.decision-strip{grid-template-columns:1fr}.decision-strip div{border-left:0;border-top:1px solid var(--line)}.page-header h1{font-size:19px}.rule-row{grid-template-columns:1fr 82px 82px}.percent-input{width:75px}.percent-input input{width:52px}.now-playing-wide .artwork{width:110px;height:110px}.now-playing-wide .media-copy h3{font-size:19px}}@media (width<=1100px){.safety-grid,.delay-grid{grid-template-columns:1fr}.private-card,.waking-card,.delay-grid>.card:last-child{grid-column:auto}.private-values{grid-template-columns:repeat(2,1fr)}.rules-tabs>span{display:none}.rules-tabs{flex-wrap:wrap}}@media (width<=900px){.rule-title{grid-template-columns:35px 1fr}.rule-title-actions{grid-column:2;justify-content:flex-start;margin-top:8px}.rule-device-head{display:none}.fixed-rule-grid,.waking-formula{grid-template-columns:1fr}.waking-formula b{transform:rotate(90deg)}.private-paths{grid-template-columns:1fr}}@media (width<=600px){.private-values{grid-template-columns:1fr}.paired-values{grid-template-columns:1fr 80px 80px}.rules-tabs .button.danger{width:100%}.reset-explainer{align-items:flex-start}}.rules-page .rule-row{min-height:39px;padding-top:4px;padding-bottom:4px}.rules-page .rule-title{padding-top:9px;padding-bottom:9px}.rules-page .percent-input input{padding-top:5px;padding-bottom:5px}", Dt = class extends HTMLElement {
 	root;
 	appHost;
 	_hass;
@@ -22372,7 +22833,7 @@ var vt = ":host,#demo{--bg:#0d1018;--bg2:#121722;--panel:#171c29;--panel2:#1d233
 	connectedCallback() {
 		if (!this.shadowRoot) {
 			let e = this.attachShadow({ mode: "open" }), t = document.createElement("style");
-			t.textContent = vt, e.append(t), this.appHost = document.createElement("div"), e.append(this.appHost);
+			t.textContent = Et, e.append(t), this.appHost = document.createElement("div"), e.append(this.appHost);
 		}
 		this.renderApp();
 	}
@@ -22381,8 +22842,8 @@ var vt = ":host,#demo{--bg:#0d1018;--bg2:#121722;--panel:#171c29;--panel2:#1d233
 	}
 	renderApp() {
 		let e = this._hass;
-		!this.isConnected || !e || !this.appHost || (this.root ||= (0, Ae.createRoot)(this.appHost), this.root.render(/* @__PURE__ */ (0, j.jsx)(_t, { hass: e })));
+		!this.isConnected || !e || !this.appHost || (this.root ||= (0, Ae.createRoot)(this.appHost), this.root.render(/* @__PURE__ */ (0, j.jsx)(Tt, { hass: e })));
 	}
 };
-customElements.get("benni-media-app") || customElements.define("benni-media-app", yt);
+customElements.get("benni-media-app") || customElements.define("benni-media-app", Dt);
 //#endregion

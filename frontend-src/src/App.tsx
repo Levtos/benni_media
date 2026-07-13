@@ -28,7 +28,7 @@ export function App({ hass }: { hass: HassLike }) {
   else if (page === "music") content = <MusicPage state={state} policy={policy} apply={apply} hass={hass} onChanged={() => void refresh(true)} />;
   else if (page === "gaming") content = <GamingPage state={state} policy={policy} />;
   else if (page === "tv") content = <TvPage state={state} policy={policy} />;
-  else if (page === "rules") content = <RulesPage matrix={data.matrix} apply={apply} hass={hass} onMatrix={onMatrix} />;
+  else if (page === "rules") content = <RulesPage matrix={data.matrix} apply={apply} state={state} hass={hass} onMatrix={onMatrix} />;
   else content = <DiagnosticsPage data={data} />;
   return <AppShell page={page} onPage={navigate} updatedAt={data.overview?.updated_at} modulesHealth={data.overview?.modules || data.state?.modules} onRefresh={() => void refresh()} refreshing={loading}>{content}</AppShell>;
 }
