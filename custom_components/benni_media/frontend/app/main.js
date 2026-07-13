@@ -10505,14 +10505,7 @@ var Ct = () => {
 	].includes(e) ? e : "overview";
 };
 function wt({ hass: e }) {
-	let [t, n] = (0, h.useState)(Ct()), { data: r, setData: i, loading: a, error: o, refresh: s } = rt(e);
-	(0, h.useEffect)(() => {
-		let e = () => n(Ct());
-		return window.addEventListener("hashchange", e), () => window.removeEventListener("hashchange", e);
-	}, []);
-	let c = (e) => {
-		window.location.hash = e, n(e);
-	}, l = (e) => i((t) => ({
+	let [t, n] = (0, h.useState)(Ct()), { data: r, setData: i, loading: a, error: o, refresh: s } = rt(e), c = (e) => n(e), l = (e) => i((t) => ({
 		...t,
 		matrix: e
 	})), u = r.state?.data || r.overview?.data?.raw?.state, d = r.policy?.data || r.overview?.data?.raw?.policy, f = r.apply?.data || r.overview?.data?.raw?.apply, p;
