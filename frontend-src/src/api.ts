@@ -29,3 +29,4 @@ export async function dispatchAction(hass: HassLike, module: "state" | "policy" 
 export const setMatrix = (hass: HassLike, patch: Record<string, unknown>) => hass.callWS<MatrixData>({ type: WS.setMatrix, patch });
 export const setScalars = (hass: HassLike, patch: Record<string, number>) => hass.callWS<MatrixData>({ type: WS.setScalars, patch });
 export const resetMatrix = (hass: HassLike) => hass.callWS<MatrixData>({ type: WS.resetMatrix });
+export const getMatrix = (hass: HassLike) => hass.callWS<MatrixData>({ type: WS.matrix });

@@ -15,9 +15,14 @@ const pageFromHash = (): PageId => {
   return ["overview", "music", "gaming", "tv", "rules", "diagnostics"].includes(value) ? value : "overview";
 };
 
+export const mayLeaveRules = (dirty: boolean) => !dirty || window.confirm("Es gibt ungespeicherte Änderungen. Seite wirklich verlassen?");
+
 export function App({ hass }: { hass: HassLike }) {
-  const [page, setPage] = useState<PageId>(pageFromHash()); const { data, setData, loading, error, refresh } = useCockpit(hass);
-  const navigate = (next: PageId) => setPage(next);
+  const [page, setPage] = useState<PageId>(pageFromHash()); const [rulesDirty, setRulesDirty] = useState(false); const { data, setData, loading, error, refresh } = useCockpit(hass);
+  const navigate = (next: PageId) => {
+    if (next !== page && !mayLeaveRules(rulesDirty)) return;
+    setPage(next);
+  };
   const onMatrix = (matrix: MatrixData) => setData((current) => ({ ...current, matrix }));
   const state = data.state?.data || data.overview?.data?.raw?.state; const policy = data.policy?.data || data.overview?.data?.raw?.policy; const apply = data.apply?.data || data.overview?.data?.raw?.apply;
   let content;
@@ -27,7 +32,7 @@ export function App({ hass }: { hass: HassLike }) {
   else if (page === "music") content = <MusicPage state={state} policy={policy} apply={apply} hass={hass} onChanged={() => void refresh(true)} />;
   else if (page === "gaming") content = <GamingPage state={state} policy={policy} />;
   else if (page === "tv") content = <TvPage state={state} policy={policy} />;
-  else if (page === "rules") content = <RulesPage matrix={data.matrix} apply={apply} state={state} hass={hass} onMatrix={onMatrix} />;
+  else if (page === "rules") content = <RulesPage matrix={data.matrix} apply={apply} state={state} hass={hass} onMatrix={onMatrix} onDirtyChange={setRulesDirty} />;
   else content = <DiagnosticsPage data={data} />;
   return <AppShell page={page} onPage={navigate} updatedAt={data.overview?.updated_at} modulesHealth={data.overview?.modules || data.state?.modules} onRefresh={() => void refresh()} refreshing={loading}>{content}</AppShell>;
 }
