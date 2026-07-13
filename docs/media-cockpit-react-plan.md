@@ -117,3 +117,14 @@ Die Gaming-Komponente kapselt Classifier-Darstellung und Edit-Einstieg separat. 
 - Private-Time-Diagnosen werden für den Alltag übersetzt; `auto_blocked:denon_off` erscheint als „Automatischer Eintritt blockiert: Denon ist ausgeschaltet.“
 - „Matrixwerte auf Standard zurücksetzen“ benennt im Bestätigungsdialog exakt die betroffenen Matrixbereiche und die ausdrücklich unberührten Skalare/Apply-Optionen.
 - Typecheck, ESLint, Vitest und Vite-Produktionsbuild sind grün. Das Bundle wird als `custom_components/benni_media/frontend/app/main.js` ausgeliefert.
+
+## Speicherworkflow v0.7.3
+
+Editierbare Regeln werden lokal als Matrix- bzw. Skalar-Patch vorgemerkt. Der
+sticky Button „Änderungen speichern“ sendet nur tatsächlich abweichende Werte
+über `set_matrix` und `set_scalars`, lädt anschließend `get_matrix` neu und
+verifiziert jede persistierte Zelle bzw. jeden Skalar. Fehler lassen den
+Dirty-State bestehen. Reset-Aktionen erzeugen ebenfalls nur vorgemerkte
+`null`-Patches. `beforeunload` und die interne Modulnavigation warnen, solange
+ungespeicherte Änderungen vorliegen; read-only Contract-Lücken beteiligen sich
+nicht am Dirty-State.

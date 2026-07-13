@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { RulesPage } from "./RulesPage";
 import type { HassLike, MatrixData } from "../types";
 
@@ -11,6 +11,28 @@ const matrix: MatrixData = {
   override: {},
 };
 const hass: HassLike = { callWS: async <T,>() => matrix as T };
+
+function persistentHass(fail = false) {
+  let stored = structuredClone(matrix);
+  const calls: Record<string, unknown>[] = [];
+  const client: HassLike = { callWS: async <T,>(message: Record<string, unknown>) => {
+    calls.push(message);
+    if (fail && message.type === "benni_media_policy/set_scalars") throw new Error("Backend nicht erreichbar");
+    if (message.type === "benni_media_policy/set_scalars") stored = { ...stored, scalars: { ...stored.scalars, ...(message.patch as Record<string, number>) } };
+    if (message.type === "benni_media_policy/set_matrix") {
+      const patch = message.patch as Record<string, Record<string, Record<string, number>>>;
+      for (const [dimension, devices] of Object.entries(patch)) for (const [device, values] of Object.entries(devices)) Object.assign((stored as unknown as Record<string, Record<string, Record<string, number>>>)[dimension][device], values);
+    }
+    return structuredClone(stored) as T;
+  } };
+  return { client, calls, stored: () => stored };
+}
+
+function grindDenonInput() {
+  const row = screen.getByText("Zusätzlicher Grind-Offset").closest(".rule-row");
+  if (!row) throw new Error("Grind-Zeile fehlt");
+  return within(row as HTMLElement).getAllByRole("spinbutton", { name: "Prozentpunkte" })[1];
+}
 
 it("shows the canonical activity inventory and separates special modes", () => {
   render(<RulesPage matrix={matrix} hass={hass} onMatrix={() => undefined} />);
@@ -42,4 +64,44 @@ it("does not invent a waking offset when the contract is absent", () => {
   fireEvent.click(screen.getByRole("button", { name: "Delays, Sleep & Waking" }));
   expect(screen.getByText("Waking-Offset: Contract fehlt")).toBeInTheDocument();
   expect(screen.getByText("waking_homepods_offset")).toBeInTheDocument();
+});
+
+it("keeps scalar edits dirty until the explicit save and reloads the persisted value", async () => {
+  const backend = persistentHass();
+  const view = render(<RulesPage matrix={matrix} hass={backend.client} onMatrix={() => undefined} />);
+  fireEvent.click(screen.getByRole("button", { name: "Gaming-Modi" }));
+  fireEvent.change(grindDenonInput(), { target: { value: "-9" } });
+  fireEvent.blur(grindDenonInput());
+  expect(screen.getByText("Ungespeicherte Änderungen")).toBeInTheDocument();
+  expect(backend.calls).toHaveLength(0);
+  fireEvent.click(screen.getByRole("button", { name: "Änderungen speichern" }));
+  await waitFor(() => expect(screen.getByText("Änderungen gespeichert")).toBeInTheDocument());
+  expect(backend.calls.map((call) => call.type)).toEqual(["benni_media_policy/set_scalars", "benni_media_policy/get_matrix"]);
+  expect(backend.calls[0].patch).toEqual({ grind_denon_offset: -.09 });
+  expect(screen.queryByText("Ungespeicherte Änderungen")).not.toBeInTheDocument();
+  view.unmount();
+  render(<RulesPage matrix={backend.stored()} hass={backend.client} onMatrix={() => undefined} />);
+  fireEvent.click(screen.getByRole("button", { name: "Gaming-Modi" }));
+  expect(grindDenonInput()).toHaveValue(-9);
+});
+
+it("uses set_matrix for matrix edits", async () => {
+  const backend = persistentHass();
+  render(<RulesPage matrix={matrix} hass={backend.client} onMatrix={() => undefined} />);
+  const baseInput = screen.getAllByRole("spinbutton", { name: "Prozent" })[0];
+  fireEvent.change(baseInput, { target: { value: "26" } }); fireEvent.blur(baseInput);
+  fireEvent.click(screen.getByRole("button", { name: "Änderungen speichern" }));
+  await waitFor(() => expect(screen.getByText("Änderungen gespeichert")).toBeInTheDocument());
+  expect(backend.calls[0]).toMatchObject({ type: "benni_media_policy/set_matrix", patch: { base: { homepods: { early_morning: .26 } } } });
+});
+
+it("keeps dirty state and shows the backend error when saving fails", async () => {
+  const backend = persistentHass(true);
+  render(<RulesPage matrix={matrix} hass={backend.client} onMatrix={() => undefined} />);
+  fireEvent.click(screen.getByRole("button", { name: "Gaming-Modi" }));
+  fireEvent.change(grindDenonInput(), { target: { value: "-8" } }); fireEvent.blur(grindDenonInput());
+  fireEvent.click(screen.getByRole("button", { name: "Änderungen speichern" }));
+  await waitFor(() => expect(screen.getByText("Backend nicht erreichbar")).toBeInTheDocument());
+  expect(screen.getByText("Speichern fehlgeschlagen")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Änderungen speichern" })).toBeEnabled();
 });

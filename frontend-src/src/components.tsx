@@ -2,13 +2,13 @@ import type { ComponentType, ReactNode } from "react";
 import {
   Activity, AlertTriangle, Apple, AudioLines, BellRing, ChevronRight, CircleGauge, CloudSun, Gamepad2,
   Headphones, Heart, House, Info, LayoutDashboard, Lightbulb, ListMusic, LockKeyhole, Menu, Monitor,
-  Moon, Music2, Pause, Play, Radio, RefreshCw, Search, Settings2, ShieldCheck, SlidersHorizontal,
+  Moon, Music2, Pause, Play, Radio, RefreshCw, Save, Search, Settings2, ShieldCheck, SlidersHorizontal,
   Sparkles, Speaker, SunMedium, Tv, Volume2, WandSparkles, X
 } from "lucide-react";
 import type { DeviceState, FormulaPart, ModuleHealth, PageId } from "./types";
 import { pct, points, stateLabel, titleCase } from "./format";
 
-export const Icon = { Activity, AlertTriangle, Apple, AudioLines, BellRing, ChevronRight, CircleGauge, CloudSun, Gamepad2, Headphones, Heart, House, Info, LayoutDashboard, Lightbulb, ListMusic, LockKeyhole, Menu, Monitor, Moon, Music2, Pause, Play, Radio, RefreshCw, Search, Settings2, ShieldCheck, SlidersHorizontal, Sparkles, Speaker, SunMedium, Tv, Volume2, WandSparkles, X };
+export const Icon = { Activity, AlertTriangle, Apple, AudioLines, BellRing, ChevronRight, CircleGauge, CloudSun, Gamepad2, Headphones, Heart, House, Info, LayoutDashboard, Lightbulb, ListMusic, LockKeyhole, Menu, Monitor, Moon, Music2, Pause, Play, Radio, RefreshCw, Save, Search, Settings2, ShieldCheck, SlidersHorizontal, Sparkles, Speaker, SunMedium, Tv, Volume2, WandSparkles, X };
 
 export function Card({ children, className = "", title, action }: { children: ReactNode; className?: string; title?: string; action?: ReactNode }) {
   return <section className={`card ${className}`}>
