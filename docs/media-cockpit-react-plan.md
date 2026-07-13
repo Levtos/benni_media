@@ -57,7 +57,7 @@ keine Umbrella-Schreib-API.
 | Gaming Grind HomePods-Offset | R17b | Ja: `grind_homepods_offset` | Ja: `set_scalars` | Nein | Reset-einzelner Skalar fehlt |
 | Gaming Grind Denon-Offset | R17b | Ja: `grind_denon_offset` | Ja: `set_scalars` | Nein | Reset-einzelner Skalar fehlt |
 | Gaming Grind Subwoofer gesperrt | R16 | Ja: feste Policy-Regel | Nein | Ja, Hard-Override | — |
-| Gaming Headset | §4.2/4.3 | Teilweise: Classifier/`headset_active`, PC-Routing und Subwoofer-Block | Nein | Ja | Dedizierte Ausgabe-/Volume-Regel je Plattform fehlt |
+| Gaming Headset | §4.2/4.3 | Ja: Classifier/`headset_active`, Spielton über Headset, PC-Routing und Subwoofer-Block | Nein | Ja, feste Modusregel | Editierbarer Geräte-Offset-Contract fehlt |
 | Manueller Nudge | R21 | Ja: Laufzeit-Action, ein gekoppelter Wert | Ja, nicht persistent | Nein | Getrennte Geräte-Nudges fehlen |
 | Track Boost HomePods | R18/R22 | Ja: `boost_offset` | Ja: `set_scalars` | Nein | Reset-einzelner Skalar fehlt |
 | Boost blockiert in Work Home/Work Away/Quiet | R18 | Ja: feste Policy-Regel | Nein | Ja, Hard-Block | — |

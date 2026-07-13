@@ -14,12 +14,27 @@ const hass: HassLike = { callWS: async <T,>() => matrix as T };
 
 it("shows the canonical activity inventory and separates special modes", () => {
   render(<RulesPage matrix={matrix} hass={hass} onMatrix={() => undefined} />);
+  expect(screen.getByText("Geschlossen")).toBeInTheDocument();
+  expect(screen.getByText("Gekippt")).toBeInTheDocument();
+  expect(screen.getByText("Offen")).toBeInTheDocument();
   expect(screen.getByText("Freizeit")).toBeInTheDocument();
   expect(screen.getByText("Haushalt")).toBeInTheDocument();
   expect(screen.queryByText("Privat")).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Gaming-Modi" }));
   expect(screen.getByText("Gaming Grind")).toBeInTheDocument();
   expect(screen.getByText("Immer gesperrt · nicht editierbar")).toBeInTheDocument();
+  expect(screen.getByText("Spielton über Headset")).toBeInTheDocument();
+});
+
+it("translates private diagnostics and names the exact matrix reset scope", () => {
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  render(<RulesPage matrix={matrix} state={{ private_blocked_reason: "auto_blocked:denon_off" }} hass={hass} onMatrix={() => undefined} />);
+  fireEvent.click(screen.getByRole("button", { name: "Caps & Private Time" }));
+  expect(screen.getByText("Automatischer Eintritt blockiert: Denon ist ausgeschaltet.")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Matrixwerte auf Standard zurücksetzen" }));
+  expect(confirm).toHaveBeenCalledWith(expect.stringContaining("Szenario-Offsets einschließlich Gaming Normal"));
+  expect(confirm).toHaveBeenCalledWith(expect.stringContaining("Fensterwerte, Grind-Offsets, Private-Time-Cap"));
+  confirm.mockRestore();
 });
 
 it("does not invent a waking offset when the contract is absent", () => {
