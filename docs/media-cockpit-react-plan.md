@@ -109,3 +109,11 @@ Diese Punkte werden nicht mit Produktiv-Mockdaten oder Frontend-Persistenz kasch
 ## Spätere Title-Classifier-Bearbeitung
 
 Die Gaming-Komponente kapselt Classifier-Darstellung und Edit-Einstieg separat. Sobald ein additiver Contract `entry_id`, `display_name`, `mode_label`, `artwork_url` und eine autorisierte Update-Action liefert, kann ein Editor ergänzt werden, ohne die Seitenstruktur oder Media-Policy zu verändern.
+
+## MVP-Abschluss v0.7.0
+
+- Fensterzustände bleiben als drei getrennte Zeilen sichtbar; „offen“ liest denselben gespeicherten Gerätewert wie „gekippt“ und ist deshalb read-only.
+- Gaming Headset erscheint als definierter Modus mit Spielton über Headset und festem Subwoofer-Override. Nur der fehlende editierbare Offset-Contract ist als Umsetzungslücke markiert.
+- Private-Time-Diagnosen werden für den Alltag übersetzt; `auto_blocked:denon_off` erscheint als „Automatischer Eintritt blockiert: Denon ist ausgeschaltet.“
+- „Matrixwerte auf Standard zurücksetzen“ benennt im Bestätigungsdialog exakt die betroffenen Matrixbereiche und die ausdrücklich unberührten Skalare/Apply-Optionen.
+- Typecheck, ESLint, Vitest und Vite-Produktionsbuild sind grün. Das Bundle wird als `custom_components/benni_media/frontend/app/main.js` ausgeliefert.
