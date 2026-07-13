@@ -3,3 +3,5 @@ __pycache__/
 *.pyo
 .venv/
 .DS_Store
+node_modules/
+.vite-dev*.log
