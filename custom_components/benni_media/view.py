@@ -1,5 +1,5 @@
 """Panel-Registrierung: EIN Sidebar-Eintrag „Media" mit dem Umbrella-Frontend
-(Vanilla/Lit, statisch ausgeliefert). Muster wie benni_blind_policy."""
+(React/Vite-Bundle, statisch ausgeliefert). Muster wie benni_blind_policy."""
 from __future__ import annotations
 
 import logging
