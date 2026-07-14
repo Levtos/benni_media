@@ -10,6 +10,10 @@ export const WS = {
   setMatrix: "benni_media_policy/set_matrix",
   resetMatrix: "benni_media_policy/reset_matrix",
   setScalars: "benni_media_policy/set_scalars",
+  applyStatus: "benni_media_apply/get_status",
+  scheduleReapply: "benni_media_apply/schedule_reapply",
+  applyReapplyNow: "benni_media_apply/apply_reapply_now",
+  cancelReapply: "benni_media_apply/cancel_reapply",
   action: "benni_media/action"
 } as const;
 
@@ -30,3 +34,7 @@ export const setMatrix = (hass: HassLike, patch: Record<string, unknown>) => has
 export const setScalars = (hass: HassLike, patch: Record<string, number>) => hass.callWS<MatrixData>({ type: WS.setScalars, patch });
 export const resetMatrix = (hass: HassLike) => hass.callWS<MatrixData>({ type: WS.resetMatrix });
 export const getMatrix = (hass: HassLike) => hass.callWS<MatrixData>({ type: WS.matrix });
+export const getApplyStatus = (hass: HassLike) => hass.callWS({ type: WS.applyStatus });
+export const scheduleReapply = (hass: HassLike, delay_s = 30) => hass.callWS({ type: WS.scheduleReapply, delay_s, reason: "rules_saved" });
+export const applyReapplyNow = (hass: HassLike) => hass.callWS({ type: WS.applyReapplyNow });
+export const cancelReapply = (hass: HassLike) => hass.callWS({ type: WS.cancelReapply });

@@ -1,4 +1,4 @@
-import type { ComponentType, ReactNode } from "react";
+import { useState, type ComponentType, type ReactNode } from "react";
 import {
   Activity, AlertTriangle, Apple, AudioLines, BellRing, ChevronRight, CircleGauge, CloudSun, Gamepad2,
   Headphones, Heart, House, Info, LayoutDashboard, Lightbulb, ListMusic, LockKeyhole, Menu, Monitor,
@@ -39,20 +39,28 @@ export function DeviceStatusGrid({ devices = {} }: { devices?: Record<string, De
   })}</div>;
 }
 
-export function Artwork({ src, kind, title }: { src?: string; kind: "music" | "gaming" | "tv"; title?: string }) {
+function localArtworkUrl(src: string) {
+  if (/^https?:\/\//i.test(src) || src.startsWith("data:")) return src;
+  return new URL(src.startsWith("/") ? src : `/${src}`, window.location.origin).toString();
+}
+
+export function Artwork({ src, candidates = [], kind, title }: { src?: string; candidates?: Array<{ url: string; source: string }>; kind: "music" | "gaming" | "tv"; title?: string }) {
   const Placeholder = kind === "music" ? Music2 : kind === "gaming" ? Gamepad2 : Tv;
+  const sources = [...new Set([src, ...candidates.map((item) => item.url)].filter((item): item is string => Boolean(item)))];
+  const [failed, setFailed] = useState<Set<string>>(new Set());
+  const current = sources.find((item) => !failed.has(item));
   return <div className={`artwork ${kind}`} aria-label={title ? `Artwork für ${title}` : "Artwork nicht verfügbar"}>
-    {src ? <img src={src} alt="" /> : <><Placeholder size={38} /><span>Artwork nicht verfügbar</span></>}
+    {current ? <img src={localArtworkUrl(current)} alt="" onError={() => setFailed((value) => new Set(value).add(current))} /> : <><Placeholder size={38} /><span>Artwork nicht verfügbar</span></>}
   </div>;
 }
 
-export function ActiveMediaCard({ kind, eyebrow, title, subtitle, detail, device, volume, artwork, active = true, controls }: {
-  kind: "music" | "gaming" | "tv"; eyebrow: string; title: string; subtitle?: string; detail?: string; device?: string; volume?: number; artwork?: string; active?: boolean; controls?: ReactNode;
+export function ActiveMediaCard({ kind, eyebrow, title, subtitle, detail, device, volume, artwork, artworkCandidates, badges, active = true, controls }: {
+  kind: "music" | "gaming" | "tv"; eyebrow: string; title: string; subtitle?: string; detail?: string; device?: string; volume?: number; artwork?: string; artworkCandidates?: Array<{ url: string; source: string }>; badges?: ReactNode; active?: boolean; controls?: ReactNode;
 }) {
   return <Card className={`media-card ${kind} ${active ? "active" : ""}`}>
-    <div className="media-card-main"><Artwork src={artwork} kind={kind} title={title} /><div className="media-copy">
+    <div className="media-card-main"><Artwork src={artwork} candidates={artworkCandidates} kind={kind} title={title} /><div className="media-copy">
       <span className="eyebrow">{kind === "music" ? <Music2 /> : kind === "gaming" ? <Gamepad2 /> : <Tv />}{eyebrow}</span>
-      <h3>{title}</h3>{subtitle && <p>{subtitle}</p>}{detail && <span className="session-detail">{detail}</span>}
+      <h3>{title}</h3>{subtitle && <p>{subtitle}</p>}{badges && <div className="effect-badges">{badges}</div>}{detail && <span className="session-detail">{detail}</span>}
     </div></div>
     {(device || volume != null || controls) && <div className="output-row"><Speaker size={19} /><div><span>{device || "Ausgabegerät"}</span><strong>{active ? "Aktiv" : "Bereit"}</strong></div><b>{pct(volume)}</b>{controls}</div>}
   </Card>;

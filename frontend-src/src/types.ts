@@ -35,6 +35,7 @@ export interface DeviceState {
   power_on?: boolean;
   ignored?: boolean;
   artwork_url?: string;
+  artwork_candidates?: Array<{ url: string; source: string }>;
 }
 
 export interface FormulaPart {
@@ -84,7 +85,7 @@ export interface StateData {
   active_reasons?: string[];
   now_playing?: DeviceState | null;
   devices?: Record<string, DeviceState>;
-  classifiers?: Record<string, { enum?: number | null; label?: string | null; display_name?: string; artwork_url?: string; entry_id?: string }>;
+  classifiers?: Record<string, { enum?: number | null; label?: string | null; display_name?: string; original_title?: string; platform?: string; artwork_url?: string; entry_id?: string }>;
   context_cards?: Record<string, unknown>;
   activity_context?: string;
   bindings?: Record<string, unknown>;
@@ -98,6 +99,7 @@ export interface ApplyData {
   ramp_step?: number;
   ramp_total?: number;
   debounce?: { window_s?: number; pending?: boolean; remaining_s?: number | null; plan?: Record<string, any> | null };
+  reapply?: { pending?: boolean; delay_s?: number; remaining_s?: number | null; reason?: string | null };
   plan?: Record<string, any>;
   log?: Array<{ ts?: string; action?: string; homepods_target?: number; denon_target?: number; subwoofer_set?: boolean; quiet?: boolean; executed?: boolean }>;
   gates?: Record<string, any>;
@@ -107,7 +109,7 @@ export interface ApplyData {
   sleep_tv?: Record<string, any>;
   wake?: Record<string, any>;
   settings?: Record<string, number>;
-  radio?: { defaults?: Array<{ name: string; uri: string }>; autostart_enabled?: boolean; ready?: boolean; resume_pending?: boolean };
+  radio?: { defaults?: Array<{ key?: string; name: string; uri: string; image?: string; playing?: boolean }>; autostart_enabled?: boolean; ready?: boolean; resume_pending?: boolean };
   bindings?: Record<string, unknown>;
   [key: string]: any;
 }
