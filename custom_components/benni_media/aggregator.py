@@ -284,6 +284,8 @@ async def dispatch_action(
                 str(params.get("query", "")), params.get("limit")
             )
             return {"results": results}
+        if action == "radio_shortcuts":
+            return {"results": await coord.async_radio_shortcuts()}
     elif module == "state":
         if action == "toggle_private":
             entity = (coord.bindings() or {}).get(PRIVATE_BINDING_KEY)

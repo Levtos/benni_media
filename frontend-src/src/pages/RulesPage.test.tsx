@@ -17,6 +17,9 @@ function persistentHass(fail = false) {
   const calls: Record<string, unknown>[] = [];
   const client: HassLike = { callWS: async <T,>(message: Record<string, unknown>) => {
     calls.push(message);
+    if (message.type === "benni_media_apply/get_status") return { reapply: { pending: false } } as T;
+    if (message.type === "benni_media_apply/schedule_reapply") return { reapply: { pending: true, remaining_s: 30 } } as T;
+    if (message.type === "benni_media_apply/cancel_reapply") return { reapply: { pending: false } } as T;
     if (fail && message.type === "benni_media_policy/set_scalars") throw new Error("Backend nicht erreichbar");
     if (message.type === "benni_media_policy/set_scalars") stored = { ...stored, scalars: { ...stored.scalars, ...(message.patch as Record<string, number>) } };
     if (message.type === "benni_media_policy/set_matrix") {
@@ -71,13 +74,13 @@ it("keeps scalar edits dirty until the explicit save and reloads the persisted v
   const view = render(<RulesPage matrix={matrix} hass={backend.client} onMatrix={() => undefined} />);
   fireEvent.click(screen.getByRole("button", { name: "Gaming-Modi" }));
   fireEvent.change(grindDenonInput(), { target: { value: "-9" } });
-  fireEvent.blur(grindDenonInput());
   expect(screen.getByText("Ungespeicherte Änderungen")).toBeInTheDocument();
-  expect(backend.calls).toHaveLength(0);
+  expect(backend.calls.filter((call) => String(call.type).includes("set_"))).toHaveLength(0);
   fireEvent.click(screen.getByRole("button", { name: "Änderungen speichern" }));
   await waitFor(() => expect(screen.getByText("Änderungen gespeichert")).toBeInTheDocument());
-  expect(backend.calls.map((call) => call.type)).toEqual(["benni_media_policy/set_scalars", "benni_media_policy/get_matrix"]);
-  expect(backend.calls[0].patch).toEqual({ grind_denon_offset: -.09 });
+  expect(backend.calls.map((call) => call.type)).toContain("benni_media_apply/schedule_reapply");
+  const scalarCall = backend.calls.find((call) => call.type === "benni_media_policy/set_scalars");
+  expect(scalarCall?.patch).toEqual({ grind_denon_offset: -.09 });
   expect(screen.queryByText("Ungespeicherte Änderungen")).not.toBeInTheDocument();
   view.unmount();
   render(<RulesPage matrix={backend.stored()} hass={backend.client} onMatrix={() => undefined} />);
@@ -92,7 +95,19 @@ it("uses set_matrix for matrix edits", async () => {
   fireEvent.change(baseInput, { target: { value: "26" } }); fireEvent.blur(baseInput);
   fireEvent.click(screen.getByRole("button", { name: "Änderungen speichern" }));
   await waitFor(() => expect(screen.getByText("Änderungen gespeichert")).toBeInTheDocument());
-  expect(backend.calls[0]).toMatchObject({ type: "benni_media_policy/set_matrix", patch: { base: { homepods: { early_morning: .26 } } } });
+  expect(backend.calls.find((call) => call.type === "benni_media_policy/set_matrix")).toMatchObject({ type: "benni_media_policy/set_matrix", patch: { base: { homepods: { early_morning: .26 } } } });
+});
+
+it("marks typing dirty immediately, blocks invalid input and can discard it", async () => {
+  const backend = persistentHass();
+  render(<RulesPage matrix={matrix} hass={backend.client} onMatrix={() => undefined} />);
+  fireEvent.click(screen.getByRole("button", { name: "Gaming-Modi" }));
+  fireEvent.change(grindDenonInput(), { target: { value: "" } });
+  expect(screen.getByText("Ungespeicherte Änderungen")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Änderungen speichern" })).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "Änderungen verwerfen" }));
+  await waitFor(() => expect(grindDenonInput()).toHaveValue(-10));
+  expect(screen.getByRole("button", { name: "Änderungen speichern" })).toBeDisabled();
 });
 
 it("keeps dirty state and shows the backend error when saving fails", async () => {
