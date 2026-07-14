@@ -2,7 +2,7 @@ import { useState } from "react";
 import { AppShell } from "./AppShell";
 import { Card, EmptyState, Icon } from "./components";
 import { useCockpit } from "./useCockpit";
-import type { HassLike, MatrixData, PageId } from "./types";
+import type { CockpitData, HassLike, MatrixData, PageId } from "./types";
 import { OverviewPage } from "./pages/OverviewPage";
 import { MusicPage } from "./pages/MusicPage";
 import { GamingPage } from "./pages/GamingPage";
@@ -17,6 +17,12 @@ const pageFromHash = (): PageId => {
 
 export const mayLeaveRules = (dirty: boolean) => !dirty || window.confirm("Es gibt ungespeicherte Änderungen. Seite wirklich verlassen?");
 
+export const resolveSnapshots = (data: CockpitData) => ({
+  state: data.state?.data ?? data.overview?.data?.raw?.state ?? {},
+  policy: data.policy?.data ?? data.overview?.data?.raw?.policy ?? {},
+  apply: data.apply?.data ?? data.overview?.data?.raw?.apply ?? {},
+});
+
 export function App({ hass }: { hass: HassLike }) {
   const [page, setPage] = useState<PageId>(pageFromHash()); const [rulesDirty, setRulesDirty] = useState(false); const { data, setData, loading, error, refresh } = useCockpit(hass);
   const navigate = (next: PageId) => {
@@ -24,7 +30,7 @@ export function App({ hass }: { hass: HassLike }) {
     setPage(next);
   };
   const onMatrix = (matrix: MatrixData) => setData((current) => ({ ...current, matrix }));
-  const state = data.state?.data || data.overview?.data?.raw?.state; const policy = data.policy?.data || data.overview?.data?.raw?.policy; const apply = data.apply?.data || data.overview?.data?.raw?.apply;
+  const { state, policy, apply } = resolveSnapshots(data);
   let content;
   if (loading && !data.overview) content = <Card><div className="loading"><Icon.RefreshCw className="spin" /><span>Media-Cockpit wird geladen …</span></div></Card>;
   else if (error && !data.overview) content = <Card><EmptyState icon={Icon.AlertTriangle} title="Cockpit nicht erreichbar" text={error} /></Card>;
