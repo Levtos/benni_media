@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import type { DeviceState, FormulaPart, ModuleHealth, PageId } from "./types";
 import { pct, points, stateLabel, titleCase } from "./format";
+import { resolveArtworkUrl, safeArtworkSource, type ArtworkCandidate } from "./artwork";
 
 export const Icon = { Activity, AlertTriangle, Apple, AudioLines, BellRing, ChevronRight, CircleGauge, CloudSun, Gamepad2, Headphones, Heart, House, Info, LayoutDashboard, Lightbulb, ListMusic, LockKeyhole, Menu, Monitor, Moon, Music2, Pause, Play, Radio, RefreshCw, Save, Search, Settings2, ShieldCheck, SlidersHorizontal, Sparkles, Speaker, SunMedium, Tv, Volume2, WandSparkles, X };
 
@@ -39,18 +40,25 @@ export function DeviceStatusGrid({ devices = {} }: { devices?: Record<string, De
   })}</div>;
 }
 
-function localArtworkUrl(src: string) {
-  if (/^https?:\/\//i.test(src) || src.startsWith("data:")) return src;
-  return new URL(src.startsWith("/") ? src : `/${src}`, window.location.origin).toString();
+type ArtworkProps = { src?: string; candidates?: ArtworkCandidate[]; kind: "music" | "gaming" | "tv"; title?: string };
+
+export function Artwork(props: ArtworkProps) {
+  // Retry a new track/candidate set, never just because of a render tick.
+  return <ArtworkAttempt key={JSON.stringify([props.title, props.src, props.candidates])} {...props} />;
 }
 
-export function Artwork({ src, candidates = [], kind, title }: { src?: string; candidates?: Array<{ url: string; source: string }>; kind: "music" | "gaming" | "tv"; title?: string }) {
+function ArtworkAttempt({ src, candidates = [], kind, title }: ArtworkProps) {
   const Placeholder = kind === "music" ? Music2 : kind === "gaming" ? Gamepad2 : Tv;
   const sources = [...new Set([src, ...candidates.map((item) => item.url)].filter((item): item is string => Boolean(item)))];
   const [failed, setFailed] = useState<Set<string>>(new Set());
-  const current = sources.find((item) => !failed.has(item));
-  return <div className={`artwork ${kind}`} aria-label={title ? `Artwork für ${title}` : "Artwork nicht verfügbar"}>
-    {current ? <img src={localArtworkUrl(current)} alt="" onError={() => setFailed((value) => new Set(value).add(current))} /> : <><Placeholder size={38} /><span>Artwork nicht verfügbar</span></>}
+  const [loaded, setLoaded] = useState<string>();
+  const resolved = sources.map((value) => ({ source: safeArtworkSource(candidates.find((item) => item.url === value)?.source || "artwork_url"), ...resolveArtworkUrl(value, window.location.origin) }));
+  const current = resolved.find((item) => item.url && !failed.has(item.url));
+  const status = current ? loaded === current.url ? "ready" : "loading" : "unavailable";
+  const diagnostics = resolved.map((item) => `${item.source}: ${item.reason || (failed.has(item.url!) ? "load_failed" : item === current ? status : "pending")} (${item.kind})`).join("; ") || "missing";
+  return <div className={`artwork ${kind}`} aria-label={title ? `Artwork für ${title}` : "Artwork nicht verfügbar"}
+    data-artwork-source={current?.source || "none"} data-artwork-state={status} title={diagnostics}>
+    {current?.url ? <img key={current.url} src={current.url} alt="" referrerPolicy="no-referrer" onLoad={() => setLoaded(current.url)} onError={() => setFailed((value) => new Set(value).add(current.url!))} /> : <><Placeholder size={38} /><span>Artwork nicht verfügbar</span></>}
   </div>;
 }
 

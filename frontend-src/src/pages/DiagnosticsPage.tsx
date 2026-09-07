@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, EmptyState, Icon, Pill, SegmentedButton } from "../components";
 import type { ApplyData, CockpitData, PolicyData, StateData } from "../types";
 import { pct, time, titleCase } from "../format";
+import { redactArtwork } from "../artwork";
 
 type DiagTab = "state" | "policy" | "apply" | "bindings" | "logs" | "raw";
 
@@ -14,7 +15,7 @@ export function DiagnosticsPage({ data }: { data: CockpitData }) {
     {tab === "apply" && <div className="diag-grid"><Card title="Gate"><KeyValues data={apply.gates || {}} /></Card><Card title="Queue / Debounce"><KeyValues data={apply.debounce || {}} /></Card><Card title="Nächster Plan"><KeyValues data={apply.plan || {}} /></Card><Card title="Nachlauf"><KeyValues data={apply.nachlauf || {}} /></Card></div>}
     {tab === "bindings" && <div className="binding-grid">{Object.entries(diagnostics.bindings || {}).map(([module, bindings]: [string, any]) => <Card title={`Bindings · ${titleCase(module)}`} key={module}><div className="bindings">{bindings.map((binding: any) => <div key={binding.key}><span>{binding.key}<small>{binding.entity_id || "nicht gebunden"}</small></span><Pill tone={binding.status === "bound" ? "green" : binding.status === "unavailable" ? "orange" : "neutral"}>{binding.status}</Pill></div>)}</div></Card>)}{!Object.keys(diagnostics.bindings || {}).length && <Card><EmptyState title="Keine Binding-Daten" text="Diagnostics liefert derzeit keine Bindings." /></Card>}</div>}
     {tab === "logs" && <Card title="Apply-Log"><div className="action-log technical">{(apply.log || []).map((entry, index) => <div key={index}><time>{time(entry.ts)}</time><Icon.Activity size={16} /><span>{entry.action || "—"} · HP {pct(entry.homepods_target)} · Denon {pct(entry.denon_target)}</span><Pill tone={entry.executed ? "green" : "orange"}>{entry.executed ? "live" : "shadow"}</Pill></div>)}</div></Card>}
-    {tab === "raw" && <Card title="Raw JSON" action={<button className="button" onClick={() => void navigator.clipboard?.writeText(JSON.stringify({ state, policy, apply, diagnostics }, null, 2))}>JSON kopieren</button>}><pre className="raw-json">{JSON.stringify({ state, policy, apply, diagnostics }, null, 2)}</pre></Card>}
+    {tab === "raw" && <Card title="Raw JSON" action={<button className="button" onClick={() => void navigator.clipboard?.writeText(JSON.stringify(redactArtwork({ state, policy, apply, diagnostics }), null, 2))}>JSON kopieren</button>}><pre className="raw-json">{JSON.stringify(redactArtwork({ state, policy, apply, diagnostics }), null, 2)}</pre></Card>}
   </div>;
 }
 
