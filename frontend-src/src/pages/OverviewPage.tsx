@@ -13,6 +13,10 @@ export function OverviewPage({ data, hass, onChanged }: { data?: OverviewData; h
   const isGaming = state.context === "gaming" || data?.scenario === "gaming" || Boolean(state.gaming_platform);
   const gameDevice = devices.ps5?.active ? devices.ps5 : devices.pc?.active ? devices.pc : undefined;
   const gameTitle = gameDevice?.title || "Aktive Gaming-Session";
+  const mediaContext = state.context || data?.scenario || "";
+  const isTv = ["tv", "streaming"].includes(mediaContext);
+  const tv = devices.tv; const atv = devices.apple_tv; const tvSource = atv?.app || atv?.source || tv?.source || state.subcontext;
+  const tvTitle = atv?.title || tv?.title || tvSource || "TV aktiv";
   const musicClassifier = state.classifiers?.homepods;
   const boostRequested = musicClassifier?.label === "boost";
   const boostBlocked = boostRequested && !policy.track_boost_applied;
@@ -27,11 +31,12 @@ export function OverviewPage({ data, hass, onChanged }: { data?: OverviewData; h
     return () => { active = false; };
   }, [hass]);
   return <>
-    <div className="section-heading"><h2>Aktive Medien</h2><Pill tone="green">{[Boolean(music), isGaming].filter(Boolean).length || 0} aktiv</Pill></div>
+    <div className="section-heading"><h2>Aktive Medien</h2><Pill tone="green">{[Boolean(music), isGaming, isTv].filter(Boolean).length || 0} aktiv</Pill></div>
     <div className="overview-hero">
       <div className="session-grid">
         {music ? <ActiveMediaCard kind="music" eyebrow="Musik" title={music.title || "Unbekannter Titel"} subtitle={music.artist} detail="Musik läuft über die HomePods" device="HomePods" volume={music.volume ?? devices.homepods?.volume} artwork={music.artwork_url} artworkCandidates={music.artwork_candidates || devices.homepods?.artwork_candidates} badges={<>{policy.track_boost_applied && <Pill tone="pink">Track-Boost aktiv</Pill>}{policy.music_muted && <Pill tone="orange">Classifier-Mute</Pill>}{boostBlocked && <Pill tone="orange">Boost blockiert</Pill>}</>} controls={<SegmentedButton disabled title="Play/Pause benötigt einen additiven Backend-Contract" icon={Icon.Pause}>Pause</SegmentedButton>} /> : <Card><EmptyState icon={Icon.Music2} title="Keine Musik-Session" text="Sobald die HomePods spielen, erscheint die Session hier." /></Card>}
-        {isGaming ? <ActiveMediaCard kind="gaming" eyebrow="Gaming" title={state.classifiers?.[state.gaming_platform || "ps5"]?.display_name || gameTitle} subtitle={titleCase(state.gaming_platform || data?.gaming_platform || data?.gaming_source)} detail={policy.is_grind ? "Grind-Modus aktiv" : state.headset_active ? "Headset-Modus aktiv" : titleCase(state.subcontext)} device={devices.denon?.active ? "Denon AVR-X1400H" : "Gaming-Audio"} volume={policy.volume_target_denon ?? data?.targets?.denon_volume} artwork={gameDevice?.artwork_url} artworkCandidates={gameDevice?.artwork_candidates} badges={<>{policy.is_grind && <Pill tone="pink">Grind</Pill>}{state.headset_active && <Pill tone="cyan">Headset</Pill>}{state.private_time_active && <Pill tone="violet">Private Time</Pill>}</>} /> : <Card><EmptyState icon={Icon.Gamepad2} title="Keine Gaming-Session" text="PlayStation- oder PC-Gaming wird parallel zur Musik eingeblendet." /></Card>}
+        {isGaming ? <ActiveMediaCard kind="gaming" eyebrow="Gaming" title={state.classifiers?.[state.gaming_platform || "ps5"]?.display_name || gameTitle} subtitle={titleCase(state.gaming_platform || data?.gaming_platform || data?.gaming_source)} detail={policy.is_grind ? "Grind-Modus aktiv" : state.headset_active ? "Headset-Modus aktiv" : titleCase(state.subcontext)} device={devices.denon?.active ? "Denon AVR-X1400H" : "Gaming-Audio"} volume={policy.volume_target_denon ?? data?.targets?.denon_volume} artwork={gameDevice?.artwork_url || state.classifiers?.[state.gaming_platform || "ps5"]?.artwork_url} artworkCandidates={gameDevice?.artwork_candidates} badges={<>{policy.is_grind && <Pill tone="pink">Grind</Pill>}{state.headset_active && <Pill tone="cyan">Headset</Pill>}{state.private_time_active && <Pill tone="violet">Private Time</Pill>}</>} /> : <Card><EmptyState icon={Icon.Gamepad2} title="Keine Gaming-Session" text="PlayStation- oder PC-Gaming wird parallel zur Musik eingeblendet." /></Card>}
+        {isTv && <ActiveMediaCard kind="tv" eyebrow={mediaContext === "streaming" ? "Streaming" : "TV"} title={tvTitle} subtitle={tvSource ? `Quelle · ${tvSource}` : undefined} detail={policy.audio_scenario_detail || titleCase(state.subcontext)} artwork={atv?.artwork_url || tv?.artwork_url} artworkCandidates={mediaContext === "streaming" ? atv?.artwork_candidates : tv?.artwork_candidates} device="Denon AVR-X1400H" volume={policy.volume_target_denon ?? data?.targets?.denon_volume} />}
       </div>
       <ReasonPanel compact reasons={policy.reasons} activeReasons={data?.active_reasons || state.active_reasons} />
     </div>
