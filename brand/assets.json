@@ -1,0 +1,38 @@
+{
+  "brand": "APOLLO",
+  "repository": "levtos/benni_media",
+  "domain": "benni_media",
+  "original_sha256": "a4649db0d6e92d4b46d59cb85aaf7fc2af9b587b0b305ca8469c9ca6c9b2db54",
+  "original_size": [
+    1254,
+    1254
+  ],
+  "original_mode": "RGB",
+  "icon_crop_xyxy": [
+    177,
+    0,
+    1077,
+    900
+  ],
+  "resampling": "Pillow LANCZOS",
+  "files": {
+    "brand/icons/icon-128.png": "86c005cf50d769716b961bb29d9a2c7f7b1466b6cac9ac04ba2b2a17243e582c",
+    "brand/icons/icon-256.png": "383cb727847d57eca2c3b3afe8af8d52f3cbfb992f14e6dab6c62ed9727bf094",
+    "brand/icons/icon-32.png": "36a120db93b124262653b7d4aca997283982c21ded9bb3c5f911a7edf8b508de",
+    "brand/icons/icon-512.png": "eea36a10740b960023afafb327e2e825ebdce88ccfc94f0ba5e431a32480bfeb",
+    "brand/icons/icon-64.png": "c943bf908e960545ada77aa704a942b03ae2f57fd099890a8a1e69d9699fbb06",
+    "brand/logos/logo-1024.png": "1e09e0267c2989afe7137404bba72c125756805981aea402e62201a1eeb0d06b",
+    "brand/logos/logo-128.png": "a9942c9e9ef81dbef866abceb51b0f89aadffb921450251eff184086a6050789",
+    "brand/logos/logo-256.png": "fe7a568a27317fff3e72de92d3c4edec64749cabf0bdc2426bc7447f6752c5cd",
+    "brand/logos/logo-512.png": "710f4099667b60efd06748f3b9e4f9e1396ebebef757903f2e9794caec9c68ec",
+    "brand/original/APOLLO.png": "a4649db0d6e92d4b46d59cb85aaf7fc2af9b587b0b305ca8469c9ca6c9b2db54",
+    "custom_components/benni_media/brand/dark_icon.png": "383cb727847d57eca2c3b3afe8af8d52f3cbfb992f14e6dab6c62ed9727bf094",
+    "custom_components/benni_media/brand/dark_icon@2x.png": "eea36a10740b960023afafb327e2e825ebdce88ccfc94f0ba5e431a32480bfeb",
+    "custom_components/benni_media/brand/dark_logo.png": "fe7a568a27317fff3e72de92d3c4edec64749cabf0bdc2426bc7447f6752c5cd",
+    "custom_components/benni_media/brand/dark_logo@2x.png": "710f4099667b60efd06748f3b9e4f9e1396ebebef757903f2e9794caec9c68ec",
+    "custom_components/benni_media/brand/icon.png": "383cb727847d57eca2c3b3afe8af8d52f3cbfb992f14e6dab6c62ed9727bf094",
+    "custom_components/benni_media/brand/icon@2x.png": "eea36a10740b960023afafb327e2e825ebdce88ccfc94f0ba5e431a32480bfeb",
+    "custom_components/benni_media/brand/logo.png": "fe7a568a27317fff3e72de92d3c4edec64749cabf0bdc2426bc7447f6752c5cd",
+    "custom_components/benni_media/brand/logo@2x.png": "710f4099667b60efd06748f3b9e4f9e1396ebebef757903f2e9794caec9c68ec"
+  }
+}
