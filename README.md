@@ -1,3 +1,5 @@
+![APOLLO](brand/logos/logo-256.png)
+
 # benni_media — Media-Umbrella-UX
 
 Dach-Integration für den Media-Stack: **ein** Sidebar-Eintrag **„Media"** mit internen
@@ -29,3 +31,8 @@ zeigt einen Empty/Error-State (**nie eine schwarze Blank-Page**).
 
 Vanilla Web Components, kein Build-Step, keine externe UI-Lib, Dracula-Farbschema.
 Aggregiert die Modul-Snapshots entkoppelt über `hass.data` (kein Python-Import).
+
+
+## Unicorn Station branding
+
+**APOLLO** is the product brand. See [asset provenance and HA display conventions](brand/README.md). Technical identities and behavior remain unchanged.
